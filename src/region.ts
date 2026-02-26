@@ -1,11 +1,7 @@
 import { Region } from "./types/index";
-import { ITableRegion } from "./interfaces/index";
+import { ITableRegion } from "./interfaces";
 
-/**
- * TableRegion - Value object representing a table region and its cell membership
- * Fixed: Uses string UUIDs for cell IDs (not number)
- * Exported: Now properly exported for use by RegionIndexManager
- */
+
 export class TableRegion implements ITableRegion {
     readonly region: Region;
     readonly cellIDs: Set<string>;

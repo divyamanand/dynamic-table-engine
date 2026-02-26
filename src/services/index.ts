@@ -1,0 +1,6 @@
+export {CellMutationService} from "./cell-mutation-service"
+export {CellNavigator} from "./cell-navigator"
+export {MergeService} from "./merge-service"
+export {RegionIndexManager} from "./region-index-manager"
+export {RegionQueryService} from "./region-query-service"
+export {TableBodyBuilder} from "./table-body-builder"

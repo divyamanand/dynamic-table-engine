@@ -1,12 +1,7 @@
+import { ICell, ITableNavigator } from "../interfaces";
 import { CellAddress } from "../types/common";
-import { ICell } from "../interfaces/cell.interface";
-import { ITableNavigator } from "../interfaces/table-navigator.interface";
 
-/**
- * CellNavigator - Pure cell lookup service
- * Responsibility: Find cells by ID (O(n*m)) or by address (O(1))
- * Fixes SRP: Extracted navigation from Table
- */
+
 export class CellNavigator implements ITableNavigator {
     constructor(private readonly cells: ICell[][]) {}
 

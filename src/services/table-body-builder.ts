@@ -3,14 +3,7 @@ import { ICell } from "../interfaces/cell.interface";
 import { ITableBodyBuilder } from "../interfaces/table-body-builder.interface";
 import { CellNavigator } from "./cell-navigator";
 
-/**
- * TableBodyBuilder - Table body construction and header resolution
- * Responsibility: buildTableBody, getCellHeaders (LSP fix)
- * Fixes SRP: Extracted layout/body building from Table
- * Fixes LSP: Implements ITableBodyBuilder properly (moved from unimplemented stub in Table)
- * Note: Both methods throw "Not yet implemented" to satisfy the interface contract at the type level
- *       This is the correct way to handle unimplemented features - honest errors at runtime, not silent failures
- */
+
 export class TableBodyBuilder implements ITableBodyBuilder {
     constructor(
         private readonly cells: ICell[][],

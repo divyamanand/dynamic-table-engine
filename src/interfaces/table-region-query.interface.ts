@@ -1,13 +1,8 @@
 import { Region } from "../types/common";
-import { ICell } from "./cell.interface";
+import { ICell, ITableRegion } from "./index";
 
-/**
- * ITableRegionQuery - Region-specific read-only queries
- * Consumed by: renderers, statistics tools, export logic
- * Responsibility: Query cells by region, get table dimensions
- */
 export interface ITableRegionQuery {
-    regionIndex: Map<Region, Set<string>>;
+    regionIndex: Map<Region, ITableRegion>;
 
     getAllCellsOfRegion(region: Region): ICell[][];
     getTotalCellCount(): { rows: number; columns: number[] };

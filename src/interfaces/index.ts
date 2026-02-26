@@ -7,3 +7,5 @@ export { ITableRegionQuery } from "./table-region-query.interface";
 export { ITableMerge } from "./table-merge.interface";
 export { ITableBodyBuilder } from "./table-body-builder.interface";
 export { ICellFactory } from "./cell-factory.interface";
+export { ITableRegionFactory } from "./table-factory.interface";
+export {IRegionIndexManager} from "./region-index-manager.interface"

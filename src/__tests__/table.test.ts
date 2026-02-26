@@ -261,8 +261,8 @@ describe('Table', () => {
       table.shiftCell(newAddress, 'cell-2', currentAddress, 'parent-100');
 
       // Region index should be updated
-      expect(table.regionIndex.get('footer')?.has('cell-2')).toBe(false);
-      expect(table.regionIndex.get('rheader')?.has('cell-2')).toBe(true);
+      expect(table.regionIndex.get('footer')?.hasCellID('cell-2')).toBe(false);
+      expect(table.regionIndex.get('rheader')?.hasCellID('cell-2')).toBe(true);
     });
 
     it('should change region when newRegion parameter is provided (no parent)', () => {
@@ -275,8 +275,8 @@ describe('Table', () => {
 
       // Cell should have new region
       expect(table.cells[1][0].inRegion).toBe('theader');
-      expect(table.regionIndex.get('body')?.has('cell-1')).toBe(false);
-      expect(table.regionIndex.get('theader')?.has('cell-1')).toBe(true);
+      expect(table.regionIndex.get('body')?.hasCellID('cell-1')).toBe(false);
+      expect(table.regionIndex.get('theader')?.hasCellID('cell-1')).toBe(true);
     });
 
     it('should prefer parent region over newRegion parameter', () => {
@@ -292,8 +292,8 @@ describe('Table', () => {
       // Cell should inherit parent's region, not the explicitly provided newRegion
       expect(table.cells[0][1].inRegion).toBe('lheader');
       expect(table.cells[0][1].parent).toBe('parent-100');
-      expect(table.regionIndex.get('lheader')?.has('cell-2')).toBe(true);
-      expect(table.regionIndex.get('footer')?.has('cell-2')).toBe(false);
+      expect(table.regionIndex.get('lheader')?.hasCellID('cell-2')).toBe(true);
+      expect(table.regionIndex.get('footer')?.hasCellID('cell-2')).toBe(false);
     });
   });
 

@@ -1,33 +1,12 @@
 import { CellAddress, CellPayload, Region } from "./types/index";
-import { ICell, ITable, ICellFactory } from "./interfaces/index";
-import { CellFactory } from "./factories/cell-factory";
-import { CellNavigator } from "./services/cell-navigator";
-import { RegionIndexManager, IRegionIndexManager } from "./services/region-index-manager";
-import { CellMutationService } from "./services/cell-mutation-service";
-import { RegionQueryService } from "./services/region-query-service";
-import { MergeService } from "./services/merge-service";
-import { TableBodyBuilder } from "./services/table-body-builder";
+import { ICell, ITable, ICellFactory, IRegionIndexManager, ITableRegion } from "./interfaces/index";
+import { CellMutationService, CellNavigator, MergeService, RegionIndexManager, RegionQueryService, TableBodyBuilder } from "./services";
+import { CellFactory } from "./factories";
 
-/**
- * Table - Thin Coordinator Facade
- *
- * Architectural changes:
- * - No longer owns logic; delegates to focused services
- * - All services receive cells[] and regionIndexManager by reference
- * - Shared mutation model: splice() mutates array in-place, Map.add/delete mutates index in-place
- * - Public API (cells, regionIndex, all methods) is identical to before
- * - All existing tests pass without modification
- *
- * Solves all SOLID violations:
- * - SRP: Logic extracted to 6 focused services
- * - OCP: Region priority logic in private method; region list injectable via RegionIndexManager
- * - LSP: getCellHeaders implemented properly in TableBodyBuilder (honest errors, not silent failures)
- * - ISP: ITable now composes 5 focused sub-interfaces
- * - DIP: ICellFactory injected (default = CellFactory, tests inject mock)
- */
+
 export class Table implements ITable {
     private _cells: ICell[][];
-    regionIndex: Map<Region, Set<string>>;
+    regionIndex: Map<Region, ITableRegion>;
 
     private indexManager!: IRegionIndexManager;
     private navigator!: CellNavigator;

@@ -1,11 +1,7 @@
 import { CellAddress, CellPayload, Region } from "../types/common";
-import { ITableNavigator } from "./table-navigator.interface";
+import { ITableNavigator } from "./index";
 
-/**
- * ITableCellStore - Cell mutation & CRUD contract
- * Consumed by: editors, drag-drop handlers, mutation operations
- * Responsibility: Add, remove, update, shift cells + inherits read-only navigation
- */
+
 export interface ITableCellStore extends ITableNavigator {
     cells: ICell[][];
 

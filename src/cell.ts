@@ -1,5 +1,5 @@
-import { CellAddress, CellPayload, Region, Style } from "./types/index";
-import { ICell } from "./interfaces/index";
+import { CellPayload, Region, Style } from "./types/index";
+import { ICell } from "./interfaces";
 
 export class Cell implements ICell {
     cellID: string;

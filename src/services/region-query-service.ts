@@ -1,15 +1,9 @@
 import { Region } from "../types/common";
-import { ICell } from "../interfaces/cell.interface";
-import { ITableRegionQuery } from "../interfaces/table-region-query.interface";
-import { IRegionIndexManager } from "./region-index-manager";
+import { ICell, ITableRegionQuery, IRegionIndexManager } from "../interfaces";
 
-/**
- * RegionQueryService - Read-only region queries
- * Responsibility: getAllCellsOfRegion, getTotalCellCount, expose regionIndex
- * Fixes SRP: Extracted region querying from Table
- */
+
 export class RegionQueryService implements ITableRegionQuery {
-    get regionIndex(): Map<Region, Set<string>> {
+    get regionIndex() {
         return this.regionIndexManager.getIndex();
     }
 

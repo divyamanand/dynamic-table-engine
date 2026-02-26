@@ -1,23 +1,7 @@
 import { Region } from "../types/common";
-import { ICell } from "../interfaces/cell.interface";
+import { TableRegionFactory } from "../factories";
+import { IRegionIndexManager, ICell, ITableRegionFactory, ITableRegion } from "../interfaces";
 
-/**
- * IRegionIndexManager - Contract for region index management
- */
-export interface IRegionIndexManager {
-    getIndex(): Map<Region, Set<string>>;
-    add(region: Region, cellID: string): void;
-    remove(region: Region, cellID: string): void;
-    move(fromRegion: Region, toRegion: Region, cellID: string): void;
-    rebuild(cells: ICell[][]): void;
-}
-
-/**
- * RegionIndexManager - Maintains Map<Region, Set<cellID>>
- * Responsibility: Invert index from region -> cells; encapsulate all region index mutations
- * Fixes SRP: Extracted region index management from Table
- * Fixes OCP: Region list is injectable via constructor (defaults to known regions)
- */
 export const DEFAULT_REGIONS: Region[] = [
     'theader',
     'lheader',
@@ -27,25 +11,30 @@ export const DEFAULT_REGIONS: Region[] = [
 ];
 
 export class RegionIndexManager implements IRegionIndexManager {
-    private index: Map<Region, Set<string>>;
+    private index: Map<Region, ITableRegion>;
 
     constructor(
         cells: ICell[][] = [],
-        private readonly knownRegions: Region[] = DEFAULT_REGIONS
+        private readonly knownRegions: Region[] = DEFAULT_REGIONS,
+        private readonly regionFactory: ITableRegionFactory = new TableRegionFactory()
     ) {
         this.index = this.buildIndex(cells);
     }
 
-    getIndex(): Map<Region, Set<string>> {
+    getIndex(): Map<Region, ITableRegion> {
         return this.index;
     }
 
+    getRegion(region: Region): ITableRegion | undefined {
+        return this.index.get(region);
+    }
+
     add(region: Region, cellID: string): void {
-        this.index.get(region)?.add(cellID);
+        this.index.get(region)?.addCell(cellID);
     }
 
     remove(region: Region, cellID: string): void {
-        this.index.get(region)?.delete(cellID);
+        this.index.get(region)?.removeCell(cellID);
     }
 
     move(fromRegion: Region, toRegion: Region, cellID: string): void {
@@ -57,13 +46,15 @@ export class RegionIndexManager implements IRegionIndexManager {
         this.index = this.buildIndex(cells);
     }
 
-    private buildIndex(cells: ICell[][]): Map<Region, Set<string>> {
-        const index = new Map<Region, Set<string>>();
-        this.knownRegions.forEach((region) => index.set(region, new Set()));
+    private buildIndex(cells: ICell[][]): Map<Region, ITableRegion> {
+        const index = new Map<Region, ITableRegion>();
+        this.knownRegions.forEach((region) =>
+            index.set(region, this.regionFactory.create(region))
+        );
 
         for (const row of cells) {
             for (const cell of row) {
-                index.get(cell.inRegion)?.add(cell.cellID);
+                index.get(cell.inRegion)?.addCell(cell.cellID);
             }
         }
         return index;

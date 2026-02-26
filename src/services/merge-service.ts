@@ -1,5 +1,4 @@
-import { ICell } from "../interfaces/cell.interface";
-import { ITableMerge } from "../interfaces/table-merge.interface";
+import { ITableMerge } from "../interfaces";
 import { CellNavigator } from "./cell-navigator";
 
 /**

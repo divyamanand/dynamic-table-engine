@@ -1,16 +1,8 @@
 import { CellAddress, CellPayload, Region } from "../types/common";
-import { ICell } from "../interfaces/cell.interface";
-import { ICellFactory } from "../interfaces/cell-factory.interface";
-import { IRegionIndexManager } from "./region-index-manager";
+import { ICell, ICellFactory, IRegionIndexManager } from "../interfaces";
 import { CellNavigator } from "./cell-navigator";
 
-/**
- * CellMutationService - All cell CRUD operations
- * Responsibility: addNewCell, removeCell, updateCell, shiftCell
- * Fixes SRP: Extracted cell mutation from Table
- * Fixes OCP: Region resolution strategy is in private method, decoupled from Table
- * Fixes DIP: Depends on ICellFactory (not Cell directly)
- */
+
 export class CellMutationService {
     constructor(
         private readonly cells: ICell[][],
