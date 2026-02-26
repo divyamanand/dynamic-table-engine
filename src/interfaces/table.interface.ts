@@ -1,19 +1,29 @@
-import { CellAddress, Region } from "../types/common";
-import { ICell } from "./cell.interface";
+import { ITableCellStore } from "./table-cell-store.interface";
+import { ITableRegionQuery } from "./table-region-query.interface";
+import { ITableMerge } from "./table-merge.interface";
+import { ITableBodyBuilder } from "./table-body-builder.interface";
 
-export interface ITable {
-    cells: ICell[][]
-    regionIndex: Map<Region, Set<string>>
-
-    mergeCells(selectedCellsIDs: string[]):void
-    unmergeCells(selectedCellID: string): void
-    addNewCell(cellAddress: CellAddress, region: Region, parentCellID?: string): void
-    getTotalCellCount(): {rows: number, columns: number[]}
-    removeCell(cellID: string, cellAddress: CellAddress): void
-    // findCellByID(cellID: string): {row: number, col: number, cell: ICell} | null
-    // findCellByAddress(cellAddress: CellAddress): {row: number, col: number, cell: ICell} | null
-    updateCell(cellID: string, payload: object): void
-    shiftCell(newCellAddress: CellAddress, cellID?: string, cellAddress?: CellAddress, newParentCellID?: string, newRegion?: Region): void
-    getAllCellsOfRegion(region: Region): ICell[][]
-    findCell(cellID?: string, cellAddress?: CellAddress): { row: number, col: number, cell: ICell } | null
-}
+/**
+ * ITable - Composition root interface
+ *
+ * Instead of a monolithic 10-method interface, ITable now composes four focused interfaces:
+ *
+ * - ITableCellStore: CRUD operations + cell navigation (findCell)
+ *   └─ extends ITableNavigator: Read-only cell lookup
+ * - ITableRegionQuery: Region-specific queries
+ * - ITableMerge: Merge/unmerge operations
+ * - ITableBodyBuilder: Body construction and header resolution (LSP fix: getCellHeaders now implemented)
+ *
+ * Fixes ISP: Each consumer depends only on the interface it needs
+ * - Renderer depends on ITableNavigator + ITableRegionQuery
+ * - Editor depends on ITableCellStore
+ * - Merge UI depends on ITableMerge
+ * - Layout engine depends on ITableBodyBuilder
+ *
+ * Existing code that types variables as ITable continues to work without changes.
+ */
+export interface ITable
+    extends ITableCellStore,
+        ITableRegionQuery,
+        ITableMerge,
+        ITableBodyBuilder {}

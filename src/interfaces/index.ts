@@ -1,3 +1,9 @@
 export { ICell } from "./cell.interface";
 export { ITable } from "./table.interface";
 export { ITableRegion } from "./region.interface";
+export { ITableNavigator } from "./table-navigator.interface";
+export { ITableCellStore } from "./table-cell-store.interface";
+export { ITableRegionQuery } from "./table-region-query.interface";
+export { ITableMerge } from "./table-merge.interface";
+export { ITableBodyBuilder } from "./table-body-builder.interface";
+export { ICellFactory } from "./cell-factory.interface";

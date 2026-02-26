@@ -1,27 +1,33 @@
 import { Region } from "./types/index";
 import { ITableRegion } from "./interfaces/index";
 
-class TableRegion implements ITableRegion {
-    region: Region;
-    cells: number[];
+/**
+ * TableRegion - Value object representing a table region and its cell membership
+ * Fixed: Uses string UUIDs for cell IDs (not number)
+ * Exported: Now properly exported for use by RegionIndexManager
+ */
+export class TableRegion implements ITableRegion {
+    readonly region: Region;
+    readonly cellIDs: Set<string>;
 
-    constructor(
-        region: Region,
-        cells: number[] = []
-    ){
-        this.region = region
-        this.cells = cells
+    constructor(region: Region, cellIDs: Set<string> = new Set()) {
+        this.region = region;
+        this.cellIDs = cellIDs;
     }
 
-    addNewPrimaryCell(cell: number): void {
-        this.cells.push(cell)
+    addCell(cellID: string): void {
+        this.cellIDs.add(cellID);
     }
 
-    addNewChildrenCell(cellID: number, parentCellID: number): void {
-        
+    removeCell(cellID: string): void {
+        this.cellIDs.delete(cellID);
     }
 
-    removeCell(cellID: number): void {
-        
+    hasCellID(cellID: string): boolean {
+        return this.cellIDs.has(cellID);
+    }
+
+    getCellIDs(): ReadonlySet<string> {
+        return this.cellIDs;
     }
 }

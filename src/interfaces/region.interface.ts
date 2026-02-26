@@ -1,10 +1,15 @@
 import { Region } from "../types/common";
 
+/**
+ * ITableRegion - Represents a table region with its cell membership
+ * Fixed: Changed from number to string cell IDs (UUID-based)
+ */
 export interface ITableRegion {
     region: Region;
-    cells: number[];
+    cellIDs: Set<string>;
 
-    addNewPrimaryCell(cell: number): void
-    addNewChildrenCell(cell: number, parentCellID: number): void
-    removeCell(cellID: number): void
+    addCell(cellID: string): void;
+    removeCell(cellID: string): void;
+    hasCellID(cellID: string): boolean;
+    getCellIDs(): ReadonlySet<string>;
 }
