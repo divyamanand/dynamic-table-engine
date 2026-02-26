@@ -359,105 +359,143 @@ describe('Table', () => {
       expect(table.getColumnsCount()).toBe(0);
     });
 
-    it('should return column count from single theader row', () => {
+    it('should return column count from leaf theader nodes (all cells without children)', () => {
+      // All cells are leaf nodes (no children)
       const h1 = new Cell('h1', 'theader');
       const h2 = new Cell('h2', 'theader');
       const h3 = new Cell('h3', 'theader');
       table.cells = [[h1, h2, h3]];
+
+      // 3 leaf theader cells = 3 columns
       expect(table.getColumnsCount()).toBe(3);
     });
 
-    it('should count columns from last theader row (hierarchical headers)', () => {
-      // Row 0: Parent headers (merged)
-      const parent1 = new Cell('parent1', 'theader');
-      const parent2 = new Cell('parent2', 'theader');
-      // Row 1: Leaf headers (actual columns)
-      const leaf1 = new Cell('leaf1', 'theader');
-      const leaf2 = new Cell('leaf2', 'theader');
-      const leaf3 = new Cell('leaf3', 'theader');
+    it('should count only leaf theader cells in hierarchical headers (parent with children)', () => {
+      // Row 0: Parent headers with children
+      const parent1 = new Cell('parent1', 'theader', ['leaf1', 'leaf2']); // Parent with 2 children
+      const parent2 = new Cell('parent2', 'theader', ['leaf3']); // Parent with 1 child
+
+      // Row 1: Leaf headers (actual columns, no children)
+      const leaf1 = new Cell('leaf1', 'theader'); // No children = leaf node
+      const leaf2 = new Cell('leaf2', 'theader'); // No children = leaf node
+      const leaf3 = new Cell('leaf3', 'theader'); // No children = leaf node
 
       table.cells = [
         [parent1, parent2],
         [leaf1, leaf2, leaf3],
       ];
 
-      // Should return count from the last theader row (row 1)
+      // Only count leaf theader cells in the last theader row (3 leaves)
       expect(table.getColumnsCount()).toBe(3);
     });
 
-    it('should handle mixed regions in theader row', () => {
-      const h1 = new Cell('h1', 'theader');
-      const h2 = new Cell('h2', 'theader');
+    it('should count leaf theader cells (ignore parent theader cells with children)', () => {
+      // Parent with children (not a leaf)
+      const parent = new Cell('parent', 'theader', ['child1', 'child2']);
+      // Leaf cells (no children)
+      const child1 = new Cell('child1', 'theader');
+      const child2 = new Cell('child2', 'theader');
+      const leaf3 = new Cell('leaf3', 'theader'); // Standalone leaf
+
+      table.cells = [[parent, child1, child2, leaf3]];
+
+      // Count only cells without children: child1, child2, leaf3 = 3 columns
+      expect(table.getColumnsCount()).toBe(3);
+    });
+
+    it('should handle mixed regions with parent-child theader relationships', () => {
       const lh = new Cell('lh', 'lheader');
+      const parent = new Cell('h-parent', 'theader', ['h-leaf1', 'h-leaf2']);
+      const h1 = new Cell('h-leaf1', 'theader');
+      const h2 = new Cell('h-leaf2', 'theader');
       const b = new Cell('b', 'body');
 
-      table.cells = [[lh, h1, h2, b]];
+      table.cells = [[lh, parent, h1, h2, b]];
 
-      // Should count only theader cells
+      // Count only theader leaf cells: h1, h2 = 2 columns
       expect(table.getColumnsCount()).toBe(2);
     });
 
-    it('should find theader row that is not the first row', () => {
+    it('should count leaf theader cells when theader is not in first row', () => {
       const lh = new Cell('lh', 'lheader');
-      const h1 = new Cell('h1', 'theader');
-      const h2 = new Cell('h2', 'theader');
+      const parent = new Cell('h-parent', 'theader', ['h-leaf1', 'h-leaf2']);
+      const h1 = new Cell('h-leaf1', 'theader');
+      const h2 = new Cell('h-leaf2', 'theader');
 
       table.cells = [
         [lh],
-        [h1, h2],
+        [parent, h1, h2],
       ];
 
+      // Count leaf theader cells: h1, h2 = 2 columns
       expect(table.getColumnsCount()).toBe(2);
     });
 
-    it('should handle multiple theader rows and count the last one', () => {
-      const parent1 = new Cell('parent1', 'theader');
-      const parent2 = new Cell('parent2', 'theader');
+    it('should handle deep hierarchical theader with multiple parent levels', () => {
+      // Row 0: Top-level parent
+      const root = new Cell('root', 'theader', ['group1', 'group2']);
+
+      // Row 1: Mid-level parents
+      const group1 = new Cell('group1', 'theader', ['leaf1', 'leaf2']);
+      const group2 = new Cell('group2', 'theader', ['leaf3', 'leaf4', 'leaf5']);
+
+      // Row 2: Leaf headers (no children)
       const leaf1 = new Cell('leaf1', 'theader');
       const leaf2 = new Cell('leaf2', 'theader');
       const leaf3 = new Cell('leaf3', 'theader');
       const leaf4 = new Cell('leaf4', 'theader');
+      const leaf5 = new Cell('leaf5', 'theader');
 
       table.cells = [
-        [parent1, parent2],
-        [leaf1, leaf2, leaf3, leaf4],
-        [new Cell('b1', 'body'), new Cell('b2', 'body'), new Cell('b3', 'body'), new Cell('b4', 'body')],
+        [root],
+        [group1, group2],
+        [leaf1, leaf2, leaf3, leaf4, leaf5],
       ];
 
-      // Should count from the last theader row (row 1, which has 4 cells)
-      expect(table.getColumnsCount()).toBe(4);
+      // Count from last theader row: only leaf cells with no children = 5 columns
+      expect(table.getColumnsCount()).toBe(5);
     });
 
-    it('should return correct count with footer after theader', () => {
-      const h1 = new Cell('h1', 'theader');
-      const h2 = new Cell('h2', 'theader');
+    it('should count correctly with footer after theader', () => {
+      const parent = new Cell('h-parent', 'theader', ['h-leaf1', 'h-leaf2']);
+      const h1 = new Cell('h-leaf1', 'theader');
+      const h2 = new Cell('h-leaf2', 'theader');
       const f1 = new Cell('f1', 'footer');
       const f2 = new Cell('f2', 'footer');
 
       table.cells = [
-        [h1, h2],
+        [parent, h1, h2],
         [f1, f2],
       ];
 
-      // Should count from theader row (row 0)
+      // Count leaf theader cells: h1, h2 = 2 columns
       expect(table.getColumnsCount()).toBe(2);
     });
 
-    it('should return correct count with body cells between headers', () => {
-      const h1 = new Cell('h1', 'theader');
-      const h2 = new Cell('h2', 'theader');
+    it('should count correctly when theader appears after body', () => {
       const b1 = new Cell('b1', 'body');
       const b2 = new Cell('b2', 'body');
-      const h3 = new Cell('h3', 'theader');
+      const parent = new Cell('h-parent', 'theader', ['h-leaf1']);
+      const h1 = new Cell('h-leaf1', 'theader');
 
       table.cells = [
-        [h1, h2],
         [b1, b2],
-        [h3],
+        [parent, h1],
       ];
 
-      // Should count from the last theader row (row 2, which has 1 cell)
+      // Count from the last theader row: only h1 (leaf cell) = 1 column
       expect(table.getColumnsCount()).toBe(1);
+    });
+
+    it('should return 0 when theader cells have children but no leaf nodes', () => {
+      const parent1 = new Cell('parent1', 'theader', ['child1']);
+      const parent2 = new Cell('parent2', 'theader', ['child2']);
+      // Only parents, no actual leaf cells
+
+      table.cells = [[parent1, parent2]];
+
+      // Count leaf theader cells in last row: 0 (both have children)
+      expect(table.getColumnsCount()).toBe(0);
     });
   });
 });

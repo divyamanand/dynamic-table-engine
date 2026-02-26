@@ -33,9 +33,11 @@ export class RegionQueryService implements ITableRegionQuery {
             return 0;
         }
 
-        // Count theader cells in the last theader row
+        // Count only theader leaf nodes (cells without children)
+        // Parent theader cells (those with children) are excluded
+        // Leaf nodes represent the actual columns in the table
         return this.cells[lastTheaderRowIndex].filter(
-            (cell) => cell.inRegion === 'theader'
+            (cell) => cell.inRegion === 'theader' && cell.children.length === 0
         ).length;
     }
 
