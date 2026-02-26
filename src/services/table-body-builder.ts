@@ -15,6 +15,8 @@ export class TableBodyBuilder implements ITableBodyBuilder {
         // 3. Append those cells into this.cells and update the regionIndex
         // 4. On merge: rebuild only affected rows/cols, not full body
         // 5. Handle two cases: already built + adding new cells, or no body built yet
+
+        //required services -> cell navigator, cell mutation service, 
         throw new Error("TableBodyBuilder.buildTableBody() - Not yet implemented");
     }
 }

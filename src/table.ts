@@ -104,6 +104,10 @@ export class Table implements ITable {
         return this.queryService.getTotalCellCount();
     }
 
+    getColumnsCount(): number {
+        return this.queryService.getColumnsCount();
+    }
+
     // --- ITableMerge interface ---
     mergeCells(selectedCellsIDs: string[]): void {
         this.mergeService.mergeCells(selectedCellsIDs);

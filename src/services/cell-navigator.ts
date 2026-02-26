@@ -42,7 +42,7 @@ export class CellNavigator implements ITableNavigator {
         }
 
         // Find right header in the same row
-        for (let c = col + 1; c < this.cells[row]?.length; c++) {
+        for (let c = this.cells[row]?.length - 1; c > col; c--) {
             if (this.cells[row][c]?.inRegion === 'rheader') {
                 rheader = this.cells[row][c];
             }
@@ -57,6 +57,7 @@ export class CellNavigator implements ITableNavigator {
 
         return { lheader, rheader, theader };
     }
+
 
     private findCellByID(
         cellID: string

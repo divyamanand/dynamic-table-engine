@@ -18,6 +18,27 @@ export class RegionQueryService implements ITableRegionQuery {
         );
     }
 
+    getColumnsCount(): number {
+        let lastTheaderRowIndex = -1;
+
+        // Find the last row that contains theader cells
+        for (let row = 0; row < this.cells.length; row++) {
+            if (this.cells[row].some((cell) => cell.inRegion === 'theader')) {
+                lastTheaderRowIndex = row;
+            }
+        }
+
+        // If no theader found, return 0
+        if (lastTheaderRowIndex === -1) {
+            return 0;
+        }
+
+        // Count theader cells in the last theader row
+        return this.cells[lastTheaderRowIndex].filter(
+            (cell) => cell.inRegion === 'theader'
+        ).length;
+    }
+
     getTotalCellCount(): { rows: number; columns: number[] } {
         return {
             rows: this.cells.length,
