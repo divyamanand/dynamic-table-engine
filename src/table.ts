@@ -41,7 +41,7 @@ export class Table implements ITable {
         );
         this.queryService = new RegionQueryService(this._cells, this.indexManager);
         this.mergeService = new MergeService(this.navigator);
-        this.bodyBuilder = new TableBodyBuilder(this._cells, this.navigator);
+        this.bodyBuilder = new TableBodyBuilder();
     }
 
     constructor(
@@ -122,6 +122,6 @@ export class Table implements ITable {
         cellID?: string,
         cellAddress?: CellAddress
     ): { lheader: ICell | null; rheader: ICell | null; theader: ICell | null } {
-        return this.bodyBuilder.getCellHeaders(cellID, cellAddress);
+        return this.navigator.getCellHeaders(cellID, cellAddress);
     }
 }
