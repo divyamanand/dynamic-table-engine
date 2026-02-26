@@ -13,7 +13,7 @@ export interface ITable {
     // findCellByID(cellID: number): {row: number, col: number, cell: ICell} | null
     // findCellByAddress(cellAddress: CellAddress): {row: number, col: number, cell: ICell} | null
     updateCell(cellID: number, payload: object): void
-    shiftCell(newCellAddress: CellAddress, cellID?: number, cellAddress?: CellAddress, newParentCellID?: number): void
+    shiftCell(newCellAddress: CellAddress, cellID?: number, cellAddress?: CellAddress, newParentCellID?: number, newRegion?: Region): void
     getAllCellsOfRegion(region: Region): ICell[][]
     findCell(cellID?: number, cellAddress?: CellAddress): { row: number, col: number, cell: ICell } | null
 }

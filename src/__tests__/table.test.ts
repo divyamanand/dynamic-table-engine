@@ -264,6 +264,37 @@ describe('Table', () => {
       expect(table.regionIndex.get('footer')?.has(2)).toBe(false);
       expect(table.regionIndex.get('rheader')?.has(2)).toBe(true);
     });
+
+    it('should change region when newRegion parameter is provided (no parent)', () => {
+      const cell = new Cell(1, 'body');
+      table.cells = [[cell]];
+
+      const currentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+      const newAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+      table.shiftCell(newAddress, 1, currentAddress, undefined, 'theader');
+
+      // Cell should have new region
+      expect(table.cells[1][0].inRegion).toBe('theader');
+      expect(table.regionIndex.get('body')?.has(1)).toBe(false);
+      expect(table.regionIndex.get('theader')?.has(1)).toBe(true);
+    });
+
+    it('should prefer parent region over newRegion parameter', () => {
+      const parentCell = new Cell(100, 'lheader');
+      const cell = new Cell(2, 'body');
+      table.cells = [[parentCell], [cell]];
+
+      const currentAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+      const newAddress: CellAddress = { rowNumber: 0, colNumber: 1 };
+      // Provide both parent and newRegion - parent should win
+      table.shiftCell(newAddress, 2, currentAddress, 100, 'footer');
+
+      // Cell should inherit parent's region, not the explicitly provided newRegion
+      expect(table.cells[0][1].inRegion).toBe('lheader');
+      expect(table.cells[0][1].parent).toBe(100);
+      expect(table.regionIndex.get('lheader')?.has(2)).toBe(true);
+      expect(table.regionIndex.get('footer')?.has(2)).toBe(false);
+    });
   });
 
   describe('getTotalCellCount', () => {

@@ -119,10 +119,13 @@ export class Table implements ITable {
         return {rows, columns}
     }
 
-    shiftCell(newCellAddress: CellAddress, cellID?: number, cellAddress?: CellAddress, newParentCellID?: number): void {
+    shiftCell(newCellAddress: CellAddress, cellID?: number, cellAddress?: CellAddress, newParentCellID?: number, newRegion?: Region): void {
         const found = this.findCell(cellID, cellAddress);
         if (!found) return;
         const { row, col, cell } = found;
+
+        const oldRegion = cell.inRegion;
+        let regionToApply = oldRegion;
 
         this.cells[row].splice(col, 1);
 
@@ -132,22 +135,25 @@ export class Table implements ITable {
         }
         this.cells[newRow].splice(newCol, 0, cell);
 
+        // Determine the new region with priority: parent region > explicit newRegion > current region
         if (newParentCellID !== undefined) {
-            const parentCell = this.findCell(newParentCellID)
+            // Parent region has highest priority
+            const parentCell = this.findCell(newParentCellID);
             if (parentCell) {
                 cell.parent = newParentCellID;
-
-                // Inherit parent's region and update region index
-                const oldRegion = cell.inRegion;
-                const newRegion = parentCell.cell.inRegion;
-
-                if (oldRegion !== newRegion) {
-                    cell.inRegion = newRegion;
-                    // Update region index
-                    this.regionIndex.get(oldRegion)?.delete(cell.cellID);
-                    this.regionIndex.get(newRegion)?.add(cell.cellID);
-                }
+                regionToApply = parentCell.cell.inRegion;
             }
+        } else if (newRegion !== undefined) {
+            // Use explicit region only if no parent is provided
+            regionToApply = newRegion;
+        }
+
+        // Update region if it changed
+        if (regionToApply !== oldRegion) {
+            cell.inRegion = regionToApply;
+            // Update region index
+            this.regionIndex.get(oldRegion)?.delete(cell.cellID);
+            this.regionIndex.get(regionToApply)?.add(cell.cellID);
         }
     }
 
