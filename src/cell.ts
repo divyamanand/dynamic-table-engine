@@ -2,26 +2,26 @@ import { CellAddress, CellPayload, Region, Style } from "./types/index";
 import { ICell } from "./interfaces/index";
 
 export class Cell implements ICell {
-    cellID: number;
+    cellID: string;
     inRegion: Region;
-    children: number[];
-    merged: number[];
-    mergedInto?: number;
+    children: string[];
+    merged: string[];
+    mergedInto?: string;
     rawValue: string | number;
     style: Style;
-    parent?: number;
+    parent?: string;
     computedValue?: string | number;
 
     constructor(
-        cellID: number,
+        cellID: string,
         inRegion?: Region,
-        children: number[] = [],
-        merged: number[] = [],
+        children: string[] = [],
+        merged: string[] = [],
         rawValue: string | number = "",
         style?: Style,
         computedValue?: string | number,
-        parent?: number,
-        mergedInto?: number
+        parent?: string,
+        mergedInto?: string
     ) {
         this.cellID = cellID;
         this.inRegion = inRegion!;
@@ -34,22 +34,22 @@ export class Cell implements ICell {
         this.parent = parent;
     }
 
-    getAllMergedCell(): number[] {
+    getAllMergedCell(): string[] {
         return this.merged;
     }
 
-    getCellChildren(): number[] {
+    getCellChildren(): string[] {
         return this.children;
     }
 
 
-    addCellChildren(cellID: number): void {
+    addCellChildren(cellID: string): void {
         if (!this.children.includes(cellID)) {
             this.children.push(cellID);
         }
     }
 
-    mergeCell(cellID: number): void {
+    mergeCell(cellID: string): void {
         if (!this.merged.includes(cellID)) {
             this.merged.push(cellID);
         }
@@ -59,7 +59,7 @@ export class Cell implements ICell {
         this.merged = [];
     }
 
-    getParentOfCell(): number {
+    getParentOfCell(): string | number {
         return this.parent ?? -1;
     }
 

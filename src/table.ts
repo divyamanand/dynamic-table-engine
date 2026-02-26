@@ -1,10 +1,11 @@
 import { Cell } from "./cell";
 import { CellAddress, CellPayload, Region } from "./types/index";
 import { ICell, ITable } from "./interfaces/index";
+import { randomUUID } from "crypto";
 
 export class Table implements ITable {
     cells: ICell[][];
-    regionIndex: Map<Region, Set<number>>;
+    regionIndex: Map<Region, Set<string>>;
 
     constructor(
         cells: ICell[][] = [],
@@ -13,8 +14,8 @@ export class Table implements ITable {
         this.regionIndex = this.buildRegionIndex();
     }
 
-    private buildRegionIndex(): Map<Region, Set<number>> {
-        const index = new Map<Region, Set<number>>();
+    private buildRegionIndex(): Map<Region, Set<string>> {
+        const index = new Map<Region, Set<string>>();
         const regions: Region[] = ['theader', 'lheader', 'rheader', 'footer', 'body'];
         regions.forEach(region => index.set(region, new Set()));
 
@@ -26,7 +27,7 @@ export class Table implements ITable {
         return index;
     }
 
-    private findCellByID(cellID: number): { row: number, col: number, cell: ICell } | null {
+    private findCellByID(cellID: string): { row: number, col: number, cell: ICell } | null {
         const totalRows = this.cells.length;
         for (let row = 0; row < totalRows; row++) {
             const totalCols = this.cells[row].length;
@@ -48,7 +49,7 @@ export class Table implements ITable {
         return { row: rowNumber, col: colNumber, cell: this.cells[rowNumber][colNumber] };
     }
 
-    findCell(cellID?: number, cellAddress?: CellAddress): { row: number, col: number, cell: ICell } | null {
+    findCell(cellID?: string, cellAddress?: CellAddress): { row: number, col: number, cell: ICell } | null {
         if (cellID !== undefined) {
             return this.findCellByID(cellID);
         } else if (cellAddress !== undefined) {
@@ -57,18 +58,18 @@ export class Table implements ITable {
         return null;
     }
 
-    addNewCell(cellAddress: CellAddress, region: Region, parentCellID?: number): void {
+    addNewCell(cellAddress: CellAddress, region: Region, parentCellID?: string): void {
         const { rowNumber, colNumber } = cellAddress;
-        const randomId = Math.floor(Math.random() * 1e9);
+        const cellID = randomUUID();
         const newCell = new Cell(
-            randomId,
+            cellID,
             region,
         );
 
         if (parentCellID !== undefined) {
             const found = this.findCell(parentCellID);
             if (found) {
-                found.cell.children.push(randomId);
+                found.cell.children.push(cellID);
                 newCell.parent = parentCellID;
             }
         }
@@ -80,10 +81,10 @@ export class Table implements ITable {
         cellsRow.splice(colNumber, 0, newCell);
 
         // Update region index
-        this.regionIndex.get(region)?.add(randomId);
+        this.regionIndex.get(region)?.add(cellID);
     }
 
-    removeCell(cellID: number, cellAddress: CellAddress): void {
+    removeCell(cellID: string, cellAddress: CellAddress): void {
         const found = this.findCell(cellID, cellAddress);
         if (!found) return;
         const { row, col, cell } = found;
@@ -95,7 +96,7 @@ export class Table implements ITable {
         this.regionIndex.get(cell.inRegion)?.delete(cellID);
     }
 
-    updateCell(cellID: number, payload: CellPayload): void {
+    updateCell(cellID: string, payload: CellPayload): void {
         const found = this.findCell(cellID);
         if (!found) return;
 
@@ -119,7 +120,7 @@ export class Table implements ITable {
         return {rows, columns}
     }
 
-    shiftCell(newCellAddress: CellAddress, cellID?: number, cellAddress?: CellAddress, newParentCellID?: number, newRegion?: Region): void {
+    shiftCell(newCellAddress: CellAddress, cellID?: string, cellAddress?: CellAddress, newParentCellID?: string, newRegion?: Region): void {
         const found = this.findCell(cellID, cellAddress);
         if (!found) return;
         const { row, col, cell } = found;
@@ -177,7 +178,7 @@ export class Table implements ITable {
         return regionCells
     }
 
-    mergeCells(selectedCellsIDs: number[]): void {
+    mergeCells(selectedCellsIDs: string[]): void {
         const [primaryCellId, ...rest] = selectedCellsIDs
         const primaryCell = this.findCell(primaryCellId)
 
@@ -190,7 +191,7 @@ export class Table implements ITable {
 
     }
 
-    unmergeCells(selectedCellID: number): void {
+    unmergeCells(selectedCellID: string): void {
         const cell = this.findCell(selectedCellID)
 
         if (!cell) throw new Error("No cell found to unmerge")

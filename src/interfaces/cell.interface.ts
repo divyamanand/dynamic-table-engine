@@ -1,21 +1,21 @@
 import { CellPayload, Region, Style } from "../types/index";
 
 export interface ICell {
-    cellID: number;
+    cellID: string;
     inRegion: Region;
-    children: number[];
-    merged: number[];
-    mergedInto?: number;
+    children: string[];
+    merged: string[];
+    mergedInto?: string;
     rawValue: string | number;
     style: Style;
-    parent?: number;
+    parent?: string;
     computedValue?: string | number;
 
-    getCellChildren(): number[];
-    addCellChildren(cellID: number): void;
-    mergeCell(cellID: number): void;
-    getAllMergedCell(): number[];
+    getCellChildren(): string[];
+    addCellChildren(cellID: string): void;
+    mergeCell(cellID: string): void;
+    getAllMergedCell(): string[];
     unmergeCells(): void;
-    getParentOfCell(): number;
+    getParentOfCell(): string | number;
     updateCell(payload: CellPayload): void
 }

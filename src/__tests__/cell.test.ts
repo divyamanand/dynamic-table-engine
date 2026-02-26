@@ -3,7 +3,7 @@ import { Style, Region } from '../types/index';
 
 describe('Cell', () => {
   let cell: Cell;
-  const cellID = 1;
+  const cellID = 'cell-1';
   const region: Region = 'theader';
   const style: Style = { font: 'Arial', fontSize: '12px' };
 
@@ -33,14 +33,14 @@ describe('Cell', () => {
     });
 
     it('should accept custom values in constructor', () => {
-      const customCell = new Cell(2, 'lheader', [1, 2], [3, 4], 'test value', style, 'computed', 0);
-      expect(customCell.cellID).toBe(2);
-      expect(customCell.children).toEqual([1, 2]);
-      expect(customCell.merged).toEqual([3, 4]);
+      const customCell = new Cell('cell-2', 'lheader', ['child-1', 'child-2'], ['merged-1', 'merged-2'], 'test value', style, 'computed', 'parent-1');
+      expect(customCell.cellID).toBe('cell-2');
+      expect(customCell.children).toEqual(['child-1', 'child-2']);
+      expect(customCell.merged).toEqual(['merged-1', 'merged-2']);
       expect(customCell.rawValue).toBe('test value');
       expect(customCell.style).toEqual(style);
       expect(customCell.computedValue).toBe('computed');
-      expect(customCell.parent).toBe(0);
+      expect(customCell.parent).toBe('parent-1');
     });
   });
 
@@ -50,8 +50,8 @@ describe('Cell', () => {
     });
 
     it('should return merged cell IDs', () => {
-      cell.merged = [1, 2, 3];
-      expect(cell.getAllMergedCell()).toEqual([1, 2, 3]);
+      cell.merged = ['merged-1', 'merged-2', 'merged-3'];
+      expect(cell.getAllMergedCell()).toEqual(['merged-1', 'merged-2', 'merged-3']);
     });
   });
 
@@ -61,54 +61,54 @@ describe('Cell', () => {
     });
 
     it('should return children cell IDs', () => {
-      cell.children = [10, 20, 30];
-      expect(cell.getCellChildren()).toEqual([10, 20, 30]);
+      cell.children = ['child-10', 'child-20', 'child-30'];
+      expect(cell.getCellChildren()).toEqual(['child-10', 'child-20', 'child-30']);
     });
   });
 
   describe('addCellChildren', () => {
     it('should add a child cell ID', () => {
-      cell.addCellChildren(100);
-      expect(cell.children).toContain(100);
+      cell.addCellChildren('child-100');
+      expect(cell.children).toContain('child-100');
     });
 
     it('should not add duplicate child IDs', () => {
-      cell.addCellChildren(100);
-      cell.addCellChildren(100);
-      expect(cell.children.filter(id => id === 100).length).toBe(1);
+      cell.addCellChildren('child-100');
+      cell.addCellChildren('child-100');
+      expect(cell.children.filter(id => id === 'child-100').length).toBe(1);
     });
 
     it('should add multiple different children', () => {
-      cell.addCellChildren(100);
-      cell.addCellChildren(200);
-      cell.addCellChildren(300);
-      expect(cell.children).toEqual([100, 200, 300]);
+      cell.addCellChildren('child-100');
+      cell.addCellChildren('child-200');
+      cell.addCellChildren('child-300');
+      expect(cell.children).toEqual(['child-100', 'child-200', 'child-300']);
     });
   });
 
   describe('mergeCell', () => {
     it('should add a merged cell ID', () => {
-      cell.mergeCell(50);
-      expect(cell.merged).toContain(50);
+      cell.mergeCell('merged-50');
+      expect(cell.merged).toContain('merged-50');
     });
 
     it('should not add duplicate merged IDs', () => {
-      cell.mergeCell(50);
-      cell.mergeCell(50);
-      expect(cell.merged.filter(id => id === 50).length).toBe(1);
+      cell.mergeCell('merged-50');
+      cell.mergeCell('merged-50');
+      expect(cell.merged.filter(id => id === 'merged-50').length).toBe(1);
     });
 
     it('should add multiple different merged cells', () => {
-      cell.mergeCell(50);
-      cell.mergeCell(60);
-      cell.mergeCell(70);
-      expect(cell.merged).toEqual([50, 60, 70]);
+      cell.mergeCell('merged-50');
+      cell.mergeCell('merged-60');
+      cell.mergeCell('merged-70');
+      expect(cell.merged).toEqual(['merged-50', 'merged-60', 'merged-70']);
     });
   });
 
   describe('unmergeCells', () => {
     it('should clear all merged cells', () => {
-      cell.merged = [1, 2, 3, 4, 5];
+      cell.merged = ['merged-1', 'merged-2', 'merged-3', 'merged-4', 'merged-5'];
       cell.unmergeCells();
       expect(cell.merged).toEqual([]);
     });
@@ -122,8 +122,8 @@ describe('Cell', () => {
 
   describe('getParentOfCell', () => {
     it('should return parent ID when parent is set', () => {
-      cell.parent = 42;
-      expect(cell.getParentOfCell()).toBe(42);
+      cell.parent = 'parent-42';
+      expect(cell.getParentOfCell()).toBe('parent-42');
     });
 
     it('should return -1 when parent is undefined', () => {
@@ -146,11 +146,11 @@ describe('Cell', () => {
       cell.updateCell({
         rawValue: 'updated',
         computedValue: 'computed',
-        parent: 5,
+        parent: 'parent-5',
       });
       expect(cell.rawValue).toBe('updated');
       expect(cell.computedValue).toBe('computed');
-      expect(cell.parent).toBe(5);
+      expect(cell.parent).toBe('parent-5');
     });
 
     it('should ignore undefined values in payload', () => {
@@ -166,9 +166,9 @@ describe('Cell', () => {
     });
 
     it('should update arrays from payload', () => {
-      cell.updateCell({ children: [1, 2, 3], merged: [4, 5] });
-      expect(cell.children).toEqual([1, 2, 3]);
-      expect(cell.merged).toEqual([4, 5]);
+      cell.updateCell({ children: ['child-1', 'child-2', 'child-3'], merged: ['merged-4', 'merged-5'] });
+      expect(cell.children).toEqual(['child-1', 'child-2', 'child-3']);
+      expect(cell.merged).toEqual(['merged-4', 'merged-5']);
     });
   });
 });

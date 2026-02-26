@@ -11,13 +11,13 @@ export interface Style {
 }
 
 export type CellPayload = {
-    cellID?: number;
+    cellID?: string;
     inRegion?: Region;
-    children?: number[];
-    merged?: number[];
+    children?: string[];
+    merged?: string[];
     rawValue?: string | number;
     style?: Style;
-    parent?: number;
-    mergedInto?: number;
+    parent?: string;
+    mergedInto?: string;
     computedValue?: string | number;
 }

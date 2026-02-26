@@ -7,12 +7,20 @@ const config: Config = {
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      },
+    }],
   },
   collectCoverageFrom: [
     '*.ts',
     '!**/*.test.ts',
     '!jest.config.ts',
+  ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
   ],
 };
 
