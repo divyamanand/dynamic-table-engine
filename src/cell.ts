@@ -6,6 +6,7 @@ export class Cell implements ICell {
     inRegion: Region;
     children: number[];
     merged: number[];
+    mergedInto?: number;
     rawValue: string | number;
     style: Style;
     parent?: number;
@@ -20,11 +21,13 @@ export class Cell implements ICell {
         style?: Style,
         computedValue?: string | number,
         parent?: number,
+        mergedInto?: number
     ) {
         this.cellID = cellID;
         this.inRegion = inRegion!;
         this.children = children;
         this.merged = merged;
+        this.mergedInto = mergedInto;
         this.rawValue = rawValue;
         this.style = style!;
         this.computedValue = computedValue;

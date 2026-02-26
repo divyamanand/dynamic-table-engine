@@ -3,7 +3,10 @@ import { ICell } from "./cell.interface";
 
 export interface ITable {
     cells: ICell[][]
+    regionIndex: Map<Region, Set<number>>
 
+    mergeCells(selectedCellsIDs: number[]):void
+    unmergeCells(selectedCellID: number): void
     addNewCell(cellAddress: CellAddress, region: Region, parentCellID?: number): void
     getTotalCellCount(): {rows: number, columns: number[]}
     removeCell(cellID: number, cellAddress: CellAddress): void

@@ -4,11 +4,26 @@ import { ICell, ITable } from "./interfaces/index";
 
 export class Table implements ITable {
     cells: ICell[][];
+    regionIndex: Map<Region, Set<number>>;
 
     constructor(
         cells: ICell[][] = [],
     ) {
         this.cells = cells;
+        this.regionIndex = this.buildRegionIndex();
+    }
+
+    private buildRegionIndex(): Map<Region, Set<number>> {
+        const index = new Map<Region, Set<number>>();
+        const regions: Region[] = ['theader', 'lheader', 'rheader', 'footer', 'body'];
+        regions.forEach(region => index.set(region, new Set()));
+
+        for (const row of this.cells) {
+            for (const cell of row) {
+                index.get(cell.inRegion)?.add(cell.cellID);
+            }
+        }
+        return index;
     }
 
     private findCellByID(cellID: number): { row: number, col: number, cell: ICell } | null {
@@ -63,6 +78,9 @@ export class Table implements ITable {
         }
         const cellsRow = this.cells[rowNumber];
         cellsRow.splice(colNumber, 0, newCell);
+
+        // Update region index
+        this.regionIndex.get(region)?.add(randomId);
     }
 
     removeCell(cellID: number, cellAddress: CellAddress): void {
@@ -72,11 +90,23 @@ export class Table implements ITable {
         if (cell.cellID !== cellID) throw new Error("The cell is not present at the mentioned cell address");
         const cellRow = this.cells[row];
         cellRow.splice(col, 1);
+
+        // Update region index
+        this.regionIndex.get(cell.inRegion)?.delete(cellID);
     }
 
     updateCell(cellID: number, payload: CellPayload): void {
         const found = this.findCell(cellID);
-        found?.cell.updateCell(payload);
+        if (!found) return;
+
+        const oldRegion = found.cell.inRegion;
+        found.cell.updateCell(payload);
+
+        // If region changed, update the index
+        if (payload.inRegion && payload.inRegion !== oldRegion) {
+            this.regionIndex.get(oldRegion)?.delete(cellID);
+            this.regionIndex.get(payload.inRegion)?.add(cellID);
+        }
     }
 
     getTotalCellCount(): { rows: number; columns: number[]; } {
@@ -103,7 +133,21 @@ export class Table implements ITable {
         this.cells[newRow].splice(newCol, 0, cell);
 
         if (newParentCellID !== undefined) {
-            cell.parent = newParentCellID;
+            const parentCell = this.findCell(newParentCellID)
+            if (parentCell) {
+                cell.parent = newParentCellID;
+
+                // Inherit parent's region and update region index
+                const oldRegion = cell.inRegion;
+                const newRegion = parentCell.cell.inRegion;
+
+                if (oldRegion !== newRegion) {
+                    cell.inRegion = newRegion;
+                    // Update region index
+                    this.regionIndex.get(oldRegion)?.delete(cell.cellID);
+                    this.regionIndex.get(newRegion)?.add(cell.cellID);
+                }
+            }
         }
     }
 
@@ -125,5 +169,33 @@ export class Table implements ITable {
         }
 
         return regionCells
+    }
+
+    mergeCells(selectedCellsIDs: number[]): void {
+        const [primaryCellId, ...rest] = selectedCellsIDs
+        const primaryCell = this.findCell(primaryCellId)
+
+        if (!primaryCell) throw new Error("The cells are missing or inavlid selection")
+        
+        for (const cellId of rest) {
+            primaryCell.cell.mergeCell(cellId)
+            this.updateCell(cellId, {mergedInto: primaryCellId})
+        }  
+
+    }
+
+    unmergeCells(selectedCellID: number): void {
+        const cell = this.findCell(selectedCellID)
+
+        if (!cell) throw new Error("No cell found to unmerge")
+        const allMergeCellIds = [...cell.cell.merged]
+
+        for (const cellId of allMergeCellIds) {
+            const subsumedCell = this.findCell(cellId);
+            if (subsumedCell) {
+                subsumedCell.cell.mergedInto = undefined;
+            }
+        }
+        cell.cell.unmergeCells()
     }
 }

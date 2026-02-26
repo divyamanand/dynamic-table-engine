@@ -5,6 +5,7 @@ export interface ICell {
     inRegion: Region;
     children: number[];
     merged: number[];
+    mergedInto?: number;
     rawValue: string | number;
     style: Style;
     parent?: number;

@@ -237,6 +237,33 @@ describe('Table', () => {
       const newAddress: CellAddress = { rowNumber: 1, colNumber: 1 };
       expect(() => table.shiftCell(newAddress, 999, currentAddress)).not.toThrow();
     });
+
+    it('should inherit parent region when shifting with new parent', () => {
+      const parentCell = new Cell(100, 'lheader');
+      const childCell = new Cell(2, 'body');
+      table.cells = [[parentCell], [childCell]];
+
+      const currentAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+      const newAddress: CellAddress = { rowNumber: 0, colNumber: 1 };
+      table.shiftCell(newAddress, 2, currentAddress, 100);
+
+      // Child should inherit parent's region
+      expect(table.cells[0][1].inRegion).toBe('lheader');
+    });
+
+    it('should update region index when shifting cell to new parent with different region', () => {
+      const parentCell = new Cell(100, 'rheader');
+      const childCell = new Cell(2, 'footer');
+      table.cells = [[parentCell], [childCell]];
+
+      const currentAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+      const newAddress: CellAddress = { rowNumber: 0, colNumber: 1 };
+      table.shiftCell(newAddress, 2, currentAddress, 100);
+
+      // Region index should be updated
+      expect(table.regionIndex.get('footer')?.has(2)).toBe(false);
+      expect(table.regionIndex.get('rheader')?.has(2)).toBe(true);
+    });
   });
 
   describe('getTotalCellCount', () => {

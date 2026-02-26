@@ -3,7 +3,7 @@ export interface CellAddress {
     colNumber: number
 }
 
-export type Region = 'theader' | 'lheader' | 'rheader' | 'footer'
+export type Region = 'theader' | 'lheader' | 'rheader' | 'footer' | 'body'
 
 export interface Style {
     font: string;
@@ -18,5 +18,6 @@ export type CellPayload = {
     rawValue?: string | number;
     style?: Style;
     parent?: number;
+    mergedInto?: number;
     computedValue?: string | number;
 }
