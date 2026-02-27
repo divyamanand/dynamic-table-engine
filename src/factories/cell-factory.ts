@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
 import { Region } from "../types/common";
-import { ICell } from "../interfaces/cell.interface";
-import { ICellFactory } from "../interfaces/cell-factory.interface";
-import { Cell } from "../cell";
+import { ICell } from "../interfaces";
+import { ICellFactory } from "../interfaces";
+import { Cell } from "../core/cell";
 
 /**
  * CellFactory - Concrete implementation of ICellFactory

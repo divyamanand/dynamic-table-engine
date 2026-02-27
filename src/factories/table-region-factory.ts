@@ -1,7 +1,7 @@
 import { Region } from "../types/common";
-import { ITableRegion } from "../interfaces/region.interface";
-import { TableRegion } from "../region";
-import { ITableRegionFactory } from "../interfaces/table-factory.interface";
+import { ITableRegion } from "../interfaces";
+import { TableRegion } from "../core/region";
+import { ITableRegionFactory } from "../interfaces";
 
 
 export class TableRegionFactory implements ITableRegionFactory {

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /e/Dev/campx/campx-dynamic-table-engine/src/interfaces/*.interface.ts)",
+      "Bash(npm test -- --verbose)",
+      "Bash(ls -la *.interface.ts)"
+    ]
+  }
+}
