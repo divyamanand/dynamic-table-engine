@@ -1,6 +1,47 @@
 import { Cell } from '../cell';
 import { Style, Region } from '../types/index';
 
+/**
+ * TABLE: Cell Tests
+ *
+ * | # | Test Name | Test Case | Expected Result |
+ * |---|-----------|-----------|-----------------|
+ * | CONSTRUCTOR |
+ * | 1 | should initialize cellID | Create Cell('cell-1', 'theader') | cellID === 'cell-1' |
+ * | 2 | should initialize inRegion | Create Cell with 'theader' region | inRegion === 'theader' |
+ * | 3 | should initialize children as empty array by default | Default constructor | children === [] |
+ * | 4 | should initialize merged as empty array by default | Default constructor | merged === [] |
+ * | 5 | should initialize rawValue as empty string by default | Default constructor | rawValue === '' |
+ * | 6 | should accept custom values in constructor | Create Cell with custom params | All properties set correctly |
+ * | GETALLMERGEDCELL |
+ * | 7 | should return empty array when no cells are merged | Call getAllMergedCell() | Returns [] |
+ * | 8 | should return merged cell IDs | Call getAllMergedCell() with merged=[...] | Returns merged array |
+ * | GETCELLCHILDREN |
+ * | 9 | should return empty array when no children exist | Call getCellChildren() | Returns [] |
+ * | 10 | should return children cells | Call getCellChildren() with children=[...] | Returns all children with correct IDs |
+ * | ADDCELLCHILDREN |
+ * | 11 | should add a child cell | addCellChildren(child) | child in children array |
+ * | 12 | should not add duplicate children | addCellChildren(same child twice) | children.length === 1 |
+ * | 13 | should add multiple different children | addCellChildren(3 different children) | children.length === 3 |
+ * | MERGECELL |
+ * | 14 | should add a merged cell ID | mergeCell('merged-50') | merged contains 'merged-50' |
+ * | 15 | should not add duplicate merged IDs | mergeCell(same ID twice) | Only one instance |
+ * | 16 | should add multiple different merged cells | mergeCell(3 different IDs) | merged === [id1, id2, id3] |
+ * | UNMERGECELLS |
+ * | 17 | should clear all merged cells | unmergeCells() with merged=[...] | merged === [] |
+ * | 18 | should handle unmergeCells when already empty | unmergeCells() when merged=[] | merged === [] |
+ * | GETPARENTOFCELL |
+ * | 19 | should return parent cell when parent is set | Set parent, call getParentOfCell() | Returns parent cell object |
+ * | 20 | should return undefined when parent is not set | Call getParentOfCell() | Returns undefined |
+ * | 21 | should return undefined when parent is explicitly undefined | Set parent=undefined | Returns undefined |
+ * | UPDATECELL |
+ * | 22 | should update rawValue from payload | updateCell({rawValue: 'new'}) | rawValue === 'new' |
+ * | 23 | should update multiple fields from payload | updateCell with rawValue, computedValue, parent | All fields updated |
+ * | 24 | should ignore undefined values in payload | updateCell({rawValue: undefined}) | rawValue unchanged |
+ * | 25 | should update style from payload | updateCell({style: newStyle}) | style updated correctly |
+ * | 26 | should update arrays from payload | updateCell({children: [...], merged: [...]}) | Arrays updated correctly |
+ */
+
 describe('Cell', () => {
   let cell: Cell;
   const cellID = 'cell-1';
@@ -33,14 +74,18 @@ describe('Cell', () => {
     });
 
     it('should accept custom values in constructor', () => {
-      const customCell = new Cell('cell-2', 'lheader', ['child-1', 'child-2'], ['merged-1', 'merged-2'], 'test value', style, 'computed', 'parent-1');
+      const child1 = new Cell('child-1', 'theader');
+      const child2 = new Cell('child-2', 'theader');
+      const customCell = new Cell('cell-2', 'lheader', [child1, child2], ['merged-1', 'merged-2'], 'test value', style, 'computed', cell);
       expect(customCell.cellID).toBe('cell-2');
-      expect(customCell.children).toEqual(['child-1', 'child-2']);
+      expect(customCell.children.length).toBe(2);
+      expect(customCell.children[0].cellID).toBe('child-1');
+      expect(customCell.children[1].cellID).toBe('child-2');
       expect(customCell.merged).toEqual(['merged-1', 'merged-2']);
       expect(customCell.rawValue).toBe('test value');
       expect(customCell.style).toEqual(style);
       expect(customCell.computedValue).toBe('computed');
-      expect(customCell.parent).toBe('parent-1');
+      expect(customCell.parent).toBe(cell);
     });
   });
 
@@ -60,29 +105,44 @@ describe('Cell', () => {
       expect(cell.getCellChildren()).toEqual([]);
     });
 
-    it('should return children cell IDs', () => {
-      cell.children = ['child-10', 'child-20', 'child-30'];
-      expect(cell.getCellChildren()).toEqual(['child-10', 'child-20', 'child-30']);
+    it('should return children cells', () => {
+      const child1 = new Cell('child-10', 'theader');
+      const child2 = new Cell('child-20', 'theader');
+      const child3 = new Cell('child-30', 'theader');
+      cell.children = [child1, child2, child3];
+      const children = cell.getCellChildren();
+      expect(children.length).toBe(3);
+      expect(children[0].cellID).toBe('child-10');
+      expect(children[1].cellID).toBe('child-20');
+      expect(children[2].cellID).toBe('child-30');
     });
   });
 
   describe('addCellChildren', () => {
-    it('should add a child cell ID', () => {
-      cell.addCellChildren('child-100');
-      expect(cell.children).toContain('child-100');
+    it('should add a child cell', () => {
+      const child = new Cell('child-100', 'theader');
+      cell.addCellChildren(child);
+      expect(cell.children).toContain(child);
     });
 
-    it('should not add duplicate child IDs', () => {
-      cell.addCellChildren('child-100');
-      cell.addCellChildren('child-100');
-      expect(cell.children.filter(id => id === 'child-100').length).toBe(1);
+    it('should not add duplicate children', () => {
+      const child = new Cell('child-100', 'theader');
+      cell.addCellChildren(child);
+      cell.addCellChildren(child);
+      expect(cell.children.length).toBe(1);
     });
 
     it('should add multiple different children', () => {
-      cell.addCellChildren('child-100');
-      cell.addCellChildren('child-200');
-      cell.addCellChildren('child-300');
-      expect(cell.children).toEqual(['child-100', 'child-200', 'child-300']);
+      const child1 = new Cell('child-100', 'theader');
+      const child2 = new Cell('child-200', 'theader');
+      const child3 = new Cell('child-300', 'theader');
+      cell.addCellChildren(child1);
+      cell.addCellChildren(child2);
+      cell.addCellChildren(child3);
+      expect(cell.children.length).toBe(3);
+      expect(cell.children[0].cellID).toBe('child-100');
+      expect(cell.children[1].cellID).toBe('child-200');
+      expect(cell.children[2].cellID).toBe('child-300');
     });
   });
 
@@ -121,18 +181,19 @@ describe('Cell', () => {
   });
 
   describe('getParentOfCell', () => {
-    it('should return parent ID when parent is set', () => {
-      cell.parent = 'parent-42';
-      expect(cell.getParentOfCell()).toBe('parent-42');
+    it('should return parent cell when parent is set', () => {
+      const parent = new Cell('parent-42', 'theader');
+      cell.parent = parent;
+      expect(cell.getParentOfCell()).toBe(parent);
     });
 
-    it('should return -1 when parent is undefined', () => {
-      expect(cell.getParentOfCell()).toBe(-1);
+    it('should return undefined when parent is not set', () => {
+      expect(cell.getParentOfCell()).toBeUndefined();
     });
 
-    it('should return -1 when parent is explicitly undefined', () => {
+    it('should return undefined when parent is explicitly undefined', () => {
       cell.parent = undefined;
-      expect(cell.getParentOfCell()).toBe(-1);
+      expect(cell.getParentOfCell()).toBeUndefined();
     });
   });
 
@@ -143,14 +204,15 @@ describe('Cell', () => {
     });
 
     it('should update multiple fields from payload', () => {
+      const parentCell = new Cell('parent-5', 'theader');
       cell.updateCell({
         rawValue: 'updated',
         computedValue: 'computed',
-        parent: 'parent-5',
+        parent: parentCell,
       });
       expect(cell.rawValue).toBe('updated');
       expect(cell.computedValue).toBe('computed');
-      expect(cell.parent).toBe('parent-5');
+      expect(cell.parent).toBe(parentCell);
     });
 
     it('should ignore undefined values in payload', () => {
@@ -166,8 +228,14 @@ describe('Cell', () => {
     });
 
     it('should update arrays from payload', () => {
-      cell.updateCell({ children: ['child-1', 'child-2', 'child-3'], merged: ['merged-4', 'merged-5'] });
-      expect(cell.children).toEqual(['child-1', 'child-2', 'child-3']);
+      const child1 = new Cell('child-1', 'theader');
+      const child2 = new Cell('child-2', 'theader');
+      const child3 = new Cell('child-3', 'theader');
+      cell.updateCell({ children: [child1, child2, child3], merged: ['merged-4', 'merged-5'] });
+      expect(cell.children.length).toBe(3);
+      expect(cell.children[0].cellID).toBe('child-1');
+      expect(cell.children[1].cellID).toBe('child-2');
+      expect(cell.children[2].cellID).toBe('child-3');
       expect(cell.merged).toEqual(['merged-4', 'merged-5']);
     });
   });

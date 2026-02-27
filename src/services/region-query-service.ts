@@ -1,7 +1,6 @@
 import { Region } from "../types/common";
 import { ICell, ITableRegionQuery, IRegionIndexManager } from "../interfaces";
 
-
 export class RegionQueryService implements ITableRegionQuery {
     get regionIndex() {
         return this.regionIndexManager.getIndex();
@@ -18,27 +17,12 @@ export class RegionQueryService implements ITableRegionQuery {
         );
     }
 
-    getColumnsCount(): number {
-        let lastTheaderRowIndex = -1;
+    getLeafCounts(region: Region): number {
+        const tableRegion = this.regionIndexManager.getRegion(region);
+        if (!tableRegion) return 0;
 
-        // Find the last row that contains theader cells
-        for (let row = 0; row < this.cells.length; row++) {
-            if (this.cells[row].some((cell) => cell.inRegion === 'theader')) {
-                lastTheaderRowIndex = row;
-            }
-        }
-
-        // If no theader found, return 0
-        if (lastTheaderRowIndex === -1) {
-            return 0;
-        }
-
-        // Count only theader leaf nodes (cells without children)
-        // Parent theader cells (those with children) are excluded
-        // Leaf nodes represent the actual columns in the table
-        return this.cells[lastTheaderRowIndex].filter(
-            (cell) => cell.inRegion === 'theader' && cell.children.length === 0
-        ).length;
+        // Direct tree traversal with ICell references (no resolver needed)
+        return tableRegion.getLeafCount();
     }
 
     getTotalCellCount(): { rows: number; columns: number[] } {

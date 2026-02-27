@@ -4,23 +4,25 @@ import { ICell } from "./interfaces";
 export class Cell implements ICell {
     cellID: string;
     inRegion: Region;
-    children: string[];
+    children: ICell[];
     merged: string[];
     mergedInto?: string;
     rawValue: string | number;
     style: Style;
-    parent?: string;
+    isDynamic: boolean;
+    parent?: ICell;
     computedValue?: string | number;
 
     constructor(
         cellID: string,
         inRegion?: Region,
-        children: string[] = [],
+        children: ICell[] = [],
         merged: string[] = [],
         rawValue: string | number = "",
+        isDynamic: boolean = false,
         style?: Style,
         computedValue?: string | number,
-        parent?: string,
+        parent?: ICell,
         mergedInto?: string
     ) {
         this.cellID = cellID;
@@ -29,6 +31,7 @@ export class Cell implements ICell {
         this.merged = merged;
         this.mergedInto = mergedInto;
         this.rawValue = rawValue;
+        this.isDynamic = isDynamic;
         this.style = style!;
         this.computedValue = computedValue;
         this.parent = parent;
@@ -38,14 +41,14 @@ export class Cell implements ICell {
         return this.merged;
     }
 
-    getCellChildren(): string[] {
+    getCellChildren(): ICell[] {
         return this.children;
     }
 
 
-    addCellChildren(cellID: string): void {
-        if (!this.children.includes(cellID)) {
-            this.children.push(cellID);
+    addCellChildren(child: ICell): void {
+        if (!this.children.includes(child)) {
+            this.children.push(child);
         }
     }
 
@@ -59,8 +62,8 @@ export class Cell implements ICell {
         this.merged = [];
     }
 
-    getParentOfCell(): string | number {
-        return this.parent ?? -1;
+    getParentOfCell(): ICell | undefined {
+        return this.parent;
     }
 
     updateCell(payload: CellPayload): void {

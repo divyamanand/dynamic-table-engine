@@ -29,17 +29,17 @@ export class RegionIndexManager implements IRegionIndexManager {
         return this.index.get(region);
     }
 
-    add(region: Region, cellID: string): void {
-        this.index.get(region)?.addCell(cellID);
+    add(region: Region, cell: ICell): void {
+        this.index.get(region)?.addCell(cell);
     }
 
     remove(region: Region, cellID: string): void {
         this.index.get(region)?.removeCell(cellID);
     }
 
-    move(fromRegion: Region, toRegion: Region, cellID: string): void {
-        this.remove(fromRegion, cellID);
-        this.add(toRegion, cellID);
+    move(fromRegion: Region, toRegion: Region, cell: ICell): void {
+        this.remove(fromRegion, cell.cellID);
+        this.add(toRegion, cell);
     }
 
     rebuild(cells: ICell[][]): void {
@@ -54,7 +54,7 @@ export class RegionIndexManager implements IRegionIndexManager {
 
         for (const row of cells) {
             for (const cell of row) {
-                index.get(cell.inRegion)?.addCell(cell.cellID);
+                index.get(cell.inRegion)?.addCell(cell);
             }
         }
         return index;

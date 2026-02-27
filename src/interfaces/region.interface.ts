@@ -1,12 +1,14 @@
 import { Region } from "../types/common";
-
+import { ICell } from "./cell.interface";
 
 export interface ITableRegion {
     region: Region;
-    cellIDs: Set<string>;
+    primaryNodes: Map<string, ICell>;
 
-    addCell(cellID: string): void;
+    addCell(cell: ICell): void;
     removeCell(cellID: string): void;
     hasCellID(cellID: string): boolean;
     getCellIDs(): ReadonlySet<string>;
+    getPrimaryNodes(): ReadonlyMap<string, ICell>;
+    getLeafCount(): number;
 }

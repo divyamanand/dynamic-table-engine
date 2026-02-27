@@ -6,5 +6,5 @@ export interface ITableRegionQuery {
 
     getAllCellsOfRegion(region: Region): ICell[][];
     getTotalCellCount(): { rows: number; columns: number[] };
-    getColumnsCount(): number;
+    getLeafCounts(region: Region): number;
 }

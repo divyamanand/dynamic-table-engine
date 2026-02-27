@@ -20,6 +20,7 @@ export class Table implements ITable {
         return this._cells;
     }
 
+    
     set cells(newCells: ICell[][]) {
         this._cells = newCells;
         // Rebuild region index when cells are directly assigned
@@ -104,8 +105,12 @@ export class Table implements ITable {
         return this.queryService.getTotalCellCount();
     }
 
+    getLeafCounts(region: Region): number {
+        return this.queryService.getLeafCounts(region);
+    }
+
     getColumnsCount(): number {
-        return this.queryService.getColumnsCount();
+        return this.queryService.getLeafCounts('theader');
     }
 
     // --- ITableMerge interface ---

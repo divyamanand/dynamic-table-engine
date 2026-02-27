@@ -22,8 +22,8 @@ export class CellMutationService {
         if (parentCellID !== undefined) {
             const found = this.navigator.findCell(parentCellID);
             if (found) {
-                found.cell.children.push(newCell.cellID);
-                newCell.parent = parentCellID;
+                found.cell.children.push(newCell);
+                newCell.parent = found.cell;
             }
         }
 
@@ -31,7 +31,7 @@ export class CellMutationService {
             this.cells[rowNumber] = [];
         }
         this.cells[rowNumber].splice(colNumber, 0, newCell);
-        this.regionIndex.add(region, newCell.cellID);
+        this.regionIndex.add(region, newCell);
     }
 
     removeCell(cellID: string, cellAddress: CellAddress): void {
@@ -40,6 +40,13 @@ export class CellMutationService {
         const { row, col, cell } = found;
         if (cell.cellID !== cellID)
             throw new Error("Cell ID does not match the address");
+        
+        if (cell.parent === undefined) {
+            const children = [...cell.children]
+            
+        }
+
+
         this.cells[row].splice(col, 1);
         this.regionIndex.remove(cell.inRegion, cellID);
     }
@@ -53,7 +60,7 @@ export class CellMutationService {
 
         // If region changed, update the index
         if (payload.inRegion && payload.inRegion !== oldRegion) {
-            this.regionIndex.move(oldRegion, payload.inRegion, cellID);
+            this.regionIndex.move(oldRegion, payload.inRegion, found.cell);
         }
     }
 
@@ -89,7 +96,7 @@ export class CellMutationService {
         // Update region if it changed
         if (regionToApply !== oldRegion) {
             cell.inRegion = regionToApply;
-            this.regionIndex.move(oldRegion, regionToApply, cell.cellID);
+            this.regionIndex.move(oldRegion, regionToApply, cell);
         }
     }
 
@@ -107,7 +114,9 @@ export class CellMutationService {
         if (newParentCellID !== undefined) {
             const parentCell = this.navigator.findCell(newParentCellID);
             if (parentCell) {
-                cell.parent = newParentCellID;
+                cell.parent = parentCell.cell;
+                // Also add cell to parent's children array
+                parentCell.cell.children.push(cell);
                 return parentCell.cell.inRegion;
             }
         }
