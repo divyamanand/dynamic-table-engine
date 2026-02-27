@@ -121,6 +121,230 @@ describe('CellMutationService', () => {
       expect(() => table.removeCell('cell-999', address)).not.toThrow();
       expect(table.cells[0].length).toBe(2);
     });
+
+    // Parent-Child Relationship Tests
+    describe('Parent-Child Relationships', () => {
+      it('should remove parent cell and convert single child to parent (orphan)', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const childCell = new Cell('child-1', 'theader');
+        childCell.parent = parentCell;
+        parentCell.children = [childCell];
+
+        table = new Table([
+          [parentCell],
+          [childCell],
+        ]);
+
+        const parentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+        table.removeCell('parent-1', parentAddress);
+
+        // Child should no longer have a parent
+        expect(childCell.parent).toBeUndefined();
+        // Parent should have no children
+        expect(parentCell.children.length).toBe(0);
+        // Child should still exist in table
+        expect(table.cells[1][0].cellID).toBe('child-1');
+      });
+
+      it('should remove parent cell and convert multiple children to parents (orphans)', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const child1 = new Cell('child-1', 'theader');
+        const child2 = new Cell('child-2', 'theader');
+        const child3 = new Cell('child-3', 'theader');
+
+        child1.parent = parentCell;
+        child2.parent = parentCell;
+        child3.parent = parentCell;
+        parentCell.children = [child1, child2, child3];
+
+        table = new Table([
+          [parentCell],
+          [child1, child2, child3],
+        ]);
+
+        const parentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+        table.removeCell('parent-1', parentAddress);
+
+        // All children should become orphans
+        expect(child1.parent).toBeUndefined();
+        expect(child2.parent).toBeUndefined();
+        expect(child3.parent).toBeUndefined();
+
+        // Parent should have no children
+        expect(parentCell.children.length).toBe(0);
+
+        // All children should still exist in table
+        expect(table.cells[1].length).toBe(3);
+        expect(table.cells[1][0].cellID).toBe('child-1');
+        expect(table.cells[1][1].cellID).toBe('child-2');
+        expect(table.cells[1][2].cellID).toBe('child-3');
+      });
+
+      it('should handle nested hierarchy: removing grandparent promotes all descendants', () => {
+        const grandparent = new Cell('grandparent-1', 'theader');
+        const parent = new Cell('parent-1', 'theader');
+        const child = new Cell('child-1', 'theader');
+
+        // Set up hierarchy
+        parent.parent = grandparent;
+        grandparent.children = [parent];
+        child.parent = parent;
+        parent.children = [child];
+
+        table = new Table([
+          [grandparent],
+          [parent],
+          [child],
+        ]);
+
+        const grandparentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+        table.removeCell('grandparent-1', grandparentAddress);
+
+        // Parent becomes orphan
+        expect(parent.parent).toBeUndefined();
+        // Child still has parent (parent is promoted, not removed)
+        expect(child.parent?.cellID).toBe('parent-1');
+        // Grandparent loses all children
+        expect(grandparent.children.length).toBe(0);
+      });
+
+      it('should remove parent and preserve child hierarchy relationships', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const child1 = new Cell('child-1', 'theader');
+        const grandchild1 = new Cell('grandchild-1', 'theader');
+        const grandchild2 = new Cell('grandchild-2', 'theader');
+
+        // Parent -> Child -> Grandchildren
+        child1.parent = parentCell;
+        grandchild1.parent = child1;
+        grandchild2.parent = child1;
+
+        parentCell.children = [child1];
+        child1.children = [grandchild1, grandchild2];
+
+        table = new Table([
+          [parentCell],
+          [child1],
+          [grandchild1, grandchild2],
+        ]);
+
+        const parentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+        table.removeCell('parent-1', parentAddress);
+
+        // Child becomes orphan
+        expect(child1.parent).toBeUndefined();
+        // But child still has grandchildren
+        expect(child1.children.length).toBe(2);
+        // Grandchildren still reference child as parent
+        expect(grandchild1.parent?.cellID).toBe('child-1');
+        expect(grandchild2.parent?.cellID).toBe('child-1');
+      });
+
+      it('should remove child cell and only affect its own relationships', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const child1 = new Cell('child-1', 'theader');
+        const child2 = new Cell('child-2', 'theader');
+
+        child1.parent = parentCell;
+        child2.parent = parentCell;
+        parentCell.children = [child1, child2];
+
+        table = new Table([
+          [parentCell],
+          [child1, child2],
+        ]);
+
+        const childAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+        table.removeCell('child-1', childAddress);
+
+        // Parent should still have child2 in children array
+        expect(parentCell.children.length).toBe(1);
+        expect(parentCell.children[0].cellID).toBe('child-2');
+        // child2 should still have parent
+        expect(child2.parent?.cellID).toBe('parent-1');
+      });
+
+      it('should clear parent reference when removing a child', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const childCell = new Cell('child-1', 'theader');
+
+        childCell.parent = parentCell;
+        parentCell.children = [childCell];
+
+        table = new Table([
+          [parentCell],
+          [childCell],
+        ]);
+
+        expect(childCell.parent?.cellID).toBe('parent-1');
+        expect(parentCell.children.length).toBe(1);
+
+        const childAddress: CellAddress = { rowNumber: 1, colNumber: 0 };
+        table.removeCell('child-1', childAddress);
+
+        // Child is removed, parent's children array updated
+        expect(parentCell.children.length).toBe(0);
+      });
+
+      it('should handle removing parent with mixed child types (some with grandchildren, some without)', () => {
+        const parentCell = new Cell('parent-1', 'theader');
+        const child1 = new Cell('child-1', 'theader');
+        const child2 = new Cell('child-2', 'theader');
+        const grandchild1 = new Cell('grandchild-1', 'theader');
+
+        // child1 has grandchildren, child2 doesn't
+        child1.parent = parentCell;
+        child2.parent = parentCell;
+        grandchild1.parent = child1;
+
+        parentCell.children = [child1, child2];
+        child1.children = [grandchild1];
+        child2.children = [];
+
+        table = new Table([
+          [parentCell],
+          [child1, child2],
+          [grandchild1],
+        ]);
+
+        const parentAddress: CellAddress = { rowNumber: 0, colNumber: 0 };
+        table.removeCell('parent-1', parentAddress);
+
+        // Both children become orphans
+        expect(child1.parent).toBeUndefined();
+        expect(child2.parent).toBeUndefined();
+
+        // child1 still has grandchild1
+        expect(child1.children.length).toBe(1);
+        expect(grandchild1.parent?.cellID).toBe('child-1');
+
+        // child2 has no children
+        expect(child2.children.length).toBe(0);
+      });
+
+      it('should handle circular parent-child reference gracefully when removing', () => {
+        // This test checks if the system can handle or prevent circular references
+        const cell1 = new Cell('cell-1', 'theader');
+        const cell2 = new Cell('cell-2', 'theader');
+
+        cell1.parent = cell2;
+        cell2.parent = cell1; // Circular reference
+        cell1.children = [cell2];
+        cell2.children = [cell1];
+
+        table = new Table([
+          [cell1],
+          [cell2],
+        ]);
+
+        const address: CellAddress = { rowNumber: 0, colNumber: 0 };
+        // Should handle gracefully without stack overflow
+        table.removeCell('cell-1', address);
+
+        // cell2's parent reference should be cleared or updated
+        expect(cell1.children.length).toBe(0);
+      });
+    });
   });
 
   describe('updateCell', () => {
