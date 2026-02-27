@@ -1,5 +1,5 @@
-import { Region } from "../types/common";
-import { ICell } from "./index";
+import { Region } from "../../types";
+import { ICell } from "../core";
 
 /**
  * ICellFactory - Abstract cell creation (DIP fix)

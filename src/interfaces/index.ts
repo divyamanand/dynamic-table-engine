@@ -20,5 +20,5 @@ export { ITableRegionQuery } from "./table/table-region-query.interface";
 export { ITableMerge } from "./table/table-merge.interface";
 
 // Factory interfaces
-export { ICellFactory } from "./cell-factory.interface";
-export { ITableRegionFactory } from "./table-factory.interface";
+export { ICellFactory } from "./factories/cell-factory.interface"
+export { ITableRegionFactory } from "./factories/table-factory.interface";
