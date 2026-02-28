@@ -20,6 +20,14 @@ export interface Style {
     fontSize: string;
 }
 
+export type Rect = {
+   cellId: string
+   startRow: number
+   startCol: number
+   endRow: number
+   endCol: number
+}
+
 export type MergeRegion = {
     rootID: string;
     startRow: number;
