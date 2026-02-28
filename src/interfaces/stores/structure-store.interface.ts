@@ -1,27 +1,24 @@
 import { Region } from "../../types"
 
 export interface IStructureStore {
-    //private
-    // topHeaderPrimaryNodes: string[]
-    // leftHeaderPrimaryNodes: string[]
-    // rightHeaderPrimaryNodes: string[]
-    // footerPrimaryNodes: string[]
-    // body: string[][]
 
-    // header trees
-    addTopHeaderRoot(cellId: string): void
-    addLeftHeaderRoot(cellId: string): void
-    addRightHeaderRoot(cellId: string): void
-    addFooterRoot(cellId: string): void
+    addRootCell(cellId: string, region: Region): void
+    addChildCell(parentId: string, childId: string): void
 
-    addHeaderChild(parentId: string, childId: string): void
+    removeCellFromHeader(cellId: string): void
 
-    getHeaderRoots(region: Region): readonly string[]
+    reorderRoot(region: Region, fromIndex: number, toIndex: number): void
+    reorderChild(parentId: string, fromIndex: number, toIndex: number): void
 
-    // body
+    getChildren(parentId: string): readonly string[]
+    getRoots(region: Region): readonly string[]
+
     insertBodyCell(rowIndex: number, colIndex: number, cellId: string): void
     removeBodyCell(rowIndex: number, colIndex: number): void
-    getBodyCell(rowIndex: number, colIndex: number): string | undefined
 
+    insertBodyRow(rowIndex: number): void
+    removeBodyRow(rowIndex: number): void
+
+    getBodyCell(rowIndex: number, colIndex: number): string | undefined
     getBody(): readonly (readonly string[])[]
 }

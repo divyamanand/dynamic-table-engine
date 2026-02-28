@@ -1,4 +1,4 @@
-import { CellLayout, CellPayload, Region, Style } from "../../types/index";
+import { CellLayout, Region, Style } from "../../types/index";
 
 export interface ICell {
     cellID: string;

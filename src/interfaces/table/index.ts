@@ -1,0 +1,1 @@
+export {ITable} from "./table.inteface"

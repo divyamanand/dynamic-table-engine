@@ -15,9 +15,9 @@ export interface CellLayout {
 
 export type Region = 'theader' | 'lheader' | 'rheader' | 'footer' | 'body'
 
-export interface Style {
+export type Style = {
     font: string;
-    fontSize: string;
+    fontSize: number;
 }
 
 export type Rect = {
@@ -28,21 +28,10 @@ export type Rect = {
    endCol: number
 }
 
-export type MergeRegion = {
-    rootID: string;
-    startRow: number;
-    startCol: number;
-    endRow: number;
-    endCol: number;
-}
 
 export type CellPayload = {
-    cellID?: string;
     inRegion?: Region;
-    children?: ICell[];
     rawValue?: string | number;
     style?: Style;
-    parent?: ICell;
-    layout?: CellLayout;
     computedValue?: string | number;
 }
