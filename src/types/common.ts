@@ -5,6 +5,7 @@ export interface CellAddress {
     colNumber: number
 }
 
+
 export interface CellLayout {
     readonly row: number;
     readonly col: number;

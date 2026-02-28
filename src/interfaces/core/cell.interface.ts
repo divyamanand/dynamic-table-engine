@@ -2,7 +2,7 @@ import { CellLayout, CellPayload, Region, Style } from "../../types/index";
 
 export interface ICell {
     cellID: string;
-    readonly layout: CellLayout | undefined;
+    readonly layout?: CellLayout | undefined;
     inRegion: Region;
     children: ICell[];
     rawValue: string | number;
