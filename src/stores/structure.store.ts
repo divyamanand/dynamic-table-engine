@@ -26,14 +26,11 @@ export class StructureStore implements IStructureStore {
         this.headerRoots.set(region, arr as string[])
     }
 
-
-    
-
     private isLeafCell(cellId: string): boolean {
         return !this.childrenMap.has(cellId) || this.childrenMap.get(cellId)?.length === 0
     }
 
-    private getLeafCells(cellId: string): string[] {
+    getLeafCells(cellId: string): string[] {
         const children = this.childrenMap.get(cellId) || []
 
         if (children.length === 0) return [cellId]
@@ -235,6 +232,10 @@ export class StructureStore implements IStructureStore {
 
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void {
         
+    }
+
+    getCompleteGrid(): string[][] {
+        return [[]]
     }
 
 

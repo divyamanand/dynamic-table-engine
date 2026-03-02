@@ -36,6 +36,7 @@ export interface IStructureStore {
     countTotalRows(): number
     countTotalCols(): number
 
+    getLeafCells(cellId: string): string[]
     getCompleteGrid(): string[][]
 
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void
