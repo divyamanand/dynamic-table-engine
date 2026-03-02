@@ -68,6 +68,21 @@ export class StructureStore implements IStructureStore {
 
     }
 
+    private getHeightOfCell(cellId: string): number {
+        if (this.isLeafCell(cellId)) return 1
+        const children = this.childrenMap.get(cellId) || []
+
+        let maxHeight = 0
+
+        for (const child of children) {
+            const height = this.getHeightOfCell(child)
+            maxHeight = Math.max(maxHeight, height)
+        }
+
+        return 1 + maxHeight
+
+    }
+
     insertBodyCol(colIndex: number): void {
         this.body = this.body.map((bodyRow) => {
             const newCell = this.cellRegistry.createCell("body")
@@ -205,7 +220,22 @@ export class StructureStore implements IStructureStore {
         this.cellRegistry.deleteCell(childId)
     }
 
+    countTotalCols(): number {
+        return this.headerRoots.get("theader")?.length ?? 0
+    }
 
+    countTotalRows(): number {
+        let maxTHeaderRows = 0
+
+        for (const header of this.headerRoots.get("theader") || []) {
+            maxTHeaderRows = Math.max(maxTHeaderRows, this.getHeightOfCell(header))
+        }
+        return this.body.length + maxTHeaderRows
+    }
+
+    reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void {
+        
+    }
 
 
 }

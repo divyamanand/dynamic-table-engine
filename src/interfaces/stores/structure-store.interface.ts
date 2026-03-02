@@ -33,7 +33,10 @@ export interface IStructureStore {
     getBodyCell(rowIndex: number, colIndex: number): string | undefined
     getBody(): readonly (readonly string[])[]
 
+    countTotalRows(): number
+    countTotalCols(): number
 
+    getCompleteGrid(): string[][]
 
-    reorderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void
+    reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void
 }
