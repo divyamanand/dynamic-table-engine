@@ -38,6 +38,8 @@ export interface IStructureStore {
 
     getLeafCells(cellId: string): string[]
     getCompleteGrid(): string[][]
+    getHeightOfCell(cellId: string): number
+    isLeafCell(cellId: string): boolean
 
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void
 }

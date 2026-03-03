@@ -26,7 +26,7 @@ export class StructureStore implements IStructureStore {
         this.headerRoots.set(region, arr as string[])
     }
 
-    private isLeafCell(cellId: string): boolean {
+    isLeafCell(cellId: string): boolean {
         return !this.childrenMap.has(cellId) || this.childrenMap.get(cellId)?.length === 0
     }
 
@@ -65,7 +65,7 @@ export class StructureStore implements IStructureStore {
 
     }
 
-    private getHeightOfCell(cellId: string): number {
+    getHeightOfCell(cellId: string): number {
         if (this.isLeafCell(cellId)) return 1
         const children = this.childrenMap.get(cellId) || []
 
