@@ -12,12 +12,34 @@ export class CellRegistry implements ICellRegistry {
 
     private cellsById: Map<string, ICell>
     private cellsByAddress: Map<string, ICell>
+    private cellIdToAddress: Map<string, string> = new Map()
 
     constructor(
     ){
         this.cellsById  = new Map()
         this.cellsByAddress = new Map()
-    } 
+    }
+
+    private toAddressKey(row: number, col: number): string {
+        return `${row},${col}`
+    }
+
+    setCellAddress(cellId: string, row: number, col: number): void {
+        const key = this.toAddressKey(row, col)
+        const cell = this.cellsById.get(cellId)
+        if (cell) {
+            this.cellsByAddress.set(key, cell)
+            this.cellIdToAddress.set(cellId, key)
+        }
+    }
+
+    clearCellAddress(cellId: string): void {
+        const key = this.cellIdToAddress.get(cellId)
+        if (key) {
+            this.cellsByAddress.delete(key)
+            this.cellIdToAddress.delete(cellId)
+        }
+    }
 
     createCell(region: Region, rawValue?: string, style?: Style, isDynamic?: boolean): string {
         const randomId = uuid()
@@ -27,6 +49,7 @@ export class CellRegistry implements ICellRegistry {
     }
 
     deleteCell(cellId: string): void {
+        this.clearCellAddress(cellId)
         this.cellsById.delete(cellId)
     }
     getCellByAddress(address: string): ICell | undefined {

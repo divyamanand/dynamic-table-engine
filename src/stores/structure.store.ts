@@ -65,6 +65,11 @@ export class StructureStore implements IStructureStore {
 
     }
 
+    private getTotalLeafCount(region: Region): number {
+        return (this.headerRoots.get(region) || [])
+            .reduce((sum, root) => sum + this.getLeafCells(root).length, 0)
+    }
+
     getHeightOfCell(cellId: string): number {
         if (this.isLeafCell(cellId)) return 1
         const children = this.childrenMap.get(cellId) || []
@@ -80,9 +85,9 @@ export class StructureStore implements IStructureStore {
 
     }
 
-    insertBodyCol(colIndex: number): void {
-        this.body = this.body.map((bodyRow) => {
-            const newCell = this.cellRegistry.createCell("body")
+    insertBodyCol(colIndex: number, data?: (string | number)[]): void {
+        this.body = this.body.map((bodyRow, rowIdx) => {
+            const newCell = this.cellRegistry.createCell("body", data?.[rowIdx]?.toString())
             const updatedRow = [...bodyRow]
             updatedRow.splice(colIndex, 0, newCell)
             return updatedRow
@@ -99,10 +104,17 @@ export class StructureStore implements IStructureStore {
     addRootCell(cellId: string, region: Region): void {
         const cellRegion = this.headerRoots.get(region) || []
         const updatedCellRegion = [...cellRegion, cellId]
-        this.setRegionStructure(region, updatedCellRegion)
 
         if (region === "theader") {
-            this.insertBodyCol(cellRegion.length)
+            const colIndex = this.getTotalLeafCount("theader")
+            this.setRegionStructure(region, updatedCellRegion)
+            this.insertBodyCol(colIndex)
+        } else if (region === "lheader" || region === "rheader") {
+            const rowIndex = this.getTotalLeafCount(region)
+            this.setRegionStructure(region, updatedCellRegion)
+            this.insertBodyRow(rowIndex)
+        } else {
+            this.setRegionStructure(region, updatedCellRegion)
         }
     }
     removeRootCell(cellId: string, region: Region): void {
@@ -115,7 +127,11 @@ export class StructureStore implements IStructureStore {
         this.setRegionStructure(region, updatedCellRegion)
 
         if (this.isLeafCell(cellId)) {
-            this.removeBodyCol(rootCellIndex)
+            if (region === "theader") {
+                this.removeBodyCol(rootCellIndex)
+            } else if (region === "lheader" || region === "rheader") {
+                this.removeBodyRow(rootCellIndex)
+            }
         }
         
         if (this.childrenMap.has(cellId)) {
@@ -138,6 +154,9 @@ export class StructureStore implements IStructureStore {
         if (!child) {
             child = this.cellRegistry.createCell(region)
         }
+
+        const wasLeaf = this.isLeafCell(parentId)
+
         this.parentMap.set(child, parentId)
         let children = this.childrenMap.get(parentId)
         if (!children) {
@@ -150,18 +169,28 @@ export class StructureStore implements IStructureStore {
             children.push(child)
         }
 
+        if (!wasLeaf) {
+            const newLeafIndex = this.getBodyIndexForHeaderLeafCell(region, child)
+            if (region === "theader") {
+                this.insertBodyCol(newLeafIndex)
+            } else if (region === "lheader" || region === "rheader") {
+                this.insertBodyRow(newLeafIndex)
+            }
+        }
     }
 
     getChildren(parentId: string): readonly string[] | undefined {
         return this.childrenMap.get(parentId)
     }
 
-    insertBodyRow(rowIndex: number): void {
-        const numColumns = this.body.length > 0 ? this.body[0].length : 0
+    insertBodyRow(rowIndex: number, data?: (string | number)[]): void {
+        const numColumns = this.body.length > 0
+            ? this.body[0].length
+            : this.getTotalLeafCount("theader")
         const newRow: string[] = []
 
         for (let i = 0; i < numColumns; i++) {
-            const newCell = this.cellRegistry.createCell("body")
+            const newCell = this.cellRegistry.createCell("body", data?.[i]?.toString())
             newRow.push(newCell)
         }
 
@@ -200,7 +229,11 @@ export class StructureStore implements IStructureStore {
 
         if (this.isLeafCell(childId)) {
             const index = this.getBodyIndexForHeaderLeafCell(region, childId)
-            this.removeBodyCol(index)
+            if (region === "theader") {
+                this.removeBodyCol(index)
+            } else if (region === "lheader" || region === "rheader") {
+                this.removeBodyRow(index)
+            }
         }
 
         if (this.childrenMap.has(childId)) {

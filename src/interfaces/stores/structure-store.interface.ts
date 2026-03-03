@@ -21,13 +21,13 @@ export interface IStructureStore {
     // BODY GRID (2D Ordered Structure)
     // =====================================================
     
-    insertBodyRow(rowIndex: number): void
+    insertBodyRow(rowIndex: number, data?: (string | number)[]): void
     removeBodyRow(rowIndex: number): void
-    
+
     // insertBodyCell(rowIndex: number, colIndex: number, cellId: string): void
     // removeBodyCell(rowIndex: number, colIndex: number): void
 
-    insertBodyCol(colIndex: number): void
+    insertBodyCol(colIndex: number, data?: (string | number)[]): void
     removeBodyCol(colIndex: number): void
     
     getBodyCell(rowIndex: number, colIndex: number): string | undefined

@@ -51,17 +51,6 @@ export class LayoutEngine implements ILayoutEngine {
 
     }
     
-    calculateHeaderCellLayout(cellId: string): {rowSpan: Map<string, number>, colSpan: Map<string, number>} {
-        //for each cell and its child cell -> rowSpan (if leaf cell -> 1 else height of root cell (from structure store) - current level (taking root as level 1) + 1)
-        const heightMax = this.structureStore.getHeightOfCell(cellId)
-        const rowSpan: Map<string, number> = new Map()
-        const colSpan: Map<string, number> = new Map()
-        this.calculateRowSpan(cellId, rowSpan, 1, heightMax)
-        this.calculateColSpan(cellId, colSpan)
-
-        return {rowSpan, colSpan}
-    }
-
     private applyLayoutForCell(
         cellId: string,
         rowStart: number,
@@ -74,6 +63,7 @@ export class LayoutEngine implements ILayoutEngine {
         const colSpan = colSpanMap.get(cellId) ?? 1
 
         cell._setLayout({ row: rowStart, col: colStart, rowSpan, colSpan })
+        this.cellRegistry.setCellAddress(cellId, rowStart, colStart)
 
         const children = this.structureStore.getChildren(cellId) ?? []
         let childColStart = colStart
@@ -103,6 +93,19 @@ export class LayoutEngine implements ILayoutEngine {
             this.applyLayoutForCell(root, 0, colStart, rowSpanMap, colSpanMap)
 
             colStart += colSpanMap.get(root) ?? 1
+        }
+    }
+
+    applyBodyLayout(): void {
+        const roots = this.structureStore.getRoots("theader") ?? []
+        const headerRows = roots.reduce((max, root) =>
+            Math.max(max, this.structureStore.getHeightOfCell(root)), 0)
+
+        const body = this.structureStore.getBody()
+        for (let r = 0; r < body.length; r++) {
+            for (let c = 0; c < body[r].length; c++) {
+                this.cellRegistry.setCellAddress(body[r][c], headerRows + r, c)
+            }
         }
     }
 
