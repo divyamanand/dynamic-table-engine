@@ -104,7 +104,11 @@ export class LayoutEngine implements ILayoutEngine {
         const body = this.structureStore.getBody()
         for (let r = 0; r < body.length; r++) {
             for (let c = 0; c < body[r].length; c++) {
-                this.cellRegistry.setCellAddress(body[r][c], headerRows + r, c)
+                const cellId = body[r][c]
+                const row = headerRows + r
+                const cell = this.cellRegistry.getCellById(cellId) as Cell
+                cell._setLayout({ row, col: c, rowSpan: 1, colSpan: 1 })
+                this.cellRegistry.setCellAddress(cellId, row, c)
             }
         }
     }
