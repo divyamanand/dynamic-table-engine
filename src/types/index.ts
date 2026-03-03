@@ -1,1 +1,1 @@
-export { CellAddress, CellLayout, Region, Style, CellPayload, MergeRegion } from "./common";
+export { CellAddress, CellLayout, Region, Style, CellPayload } from "./common";

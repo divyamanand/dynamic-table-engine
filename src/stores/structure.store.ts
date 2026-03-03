@@ -85,6 +85,10 @@ export class StructureStore implements IStructureStore {
 
     }
 
+    getLeafCount(region: Region): number {
+        return this.getTotalLeafCount(region)
+    }
+
     insertBodyCol(colIndex: number, data?: (string | number)[]): void {
         this.body = this.body.map((bodyRow, rowIdx) => {
             const newCell = this.cellRegistry.createCell("body", data?.[rowIdx]?.toString())
@@ -92,6 +96,7 @@ export class StructureStore implements IStructureStore {
             updatedRow.splice(colIndex, 0, newCell)
             return updatedRow
         })
+        this.layoutEngine.markDirty()
     }
 
     removeBodyCol(colIndex: number): void {
@@ -99,6 +104,7 @@ export class StructureStore implements IStructureStore {
             const updatedRow = bodyRow.filter((bodyVal, idx) => colIndex !== idx )
             return updatedRow
         })
+        this.layoutEngine.markDirty()
     }
 
     addRootCell(cellId: string, region: Region): void {
@@ -116,6 +122,7 @@ export class StructureStore implements IStructureStore {
         } else {
             this.setRegionStructure(region, updatedCellRegion)
         }
+        this.layoutEngine.markDirty()
     }
     removeRootCell(cellId: string, region: Region): void {
         const cellRegion = this.headerRoots.get(region)
@@ -133,16 +140,17 @@ export class StructureStore implements IStructureStore {
                 this.removeBodyRow(rootCellIndex)
             }
         }
-        
+
         if (this.childrenMap.has(cellId)) {
             this.childrenMap.delete(cellId)
-        } 
+        }
 
         for (const child of children) {
             this.parentMap.delete(child)
         }
 
         this.cellRegistry.deleteCell(cellId)
+        this.layoutEngine.markDirty()
     }
 
     getRoots(region: Region): readonly string[] | undefined {
@@ -177,6 +185,7 @@ export class StructureStore implements IStructureStore {
                 this.insertBodyRow(newLeafIndex)
             }
         }
+        this.layoutEngine.markDirty()
     }
 
     getChildren(parentId: string): readonly string[] | undefined {
@@ -195,6 +204,7 @@ export class StructureStore implements IStructureStore {
         }
 
         this.body.splice(rowIndex, 0, newRow)
+        this.layoutEngine.markDirty()
     }
 
     removeBodyRow(rowIndex: number): void {
@@ -205,6 +215,7 @@ export class StructureStore implements IStructureStore {
                 this.cellRegistry.deleteCell(cellId)
             }
         }
+        this.layoutEngine.markDirty()
     }
 
     getBodyCell(rowIndex: number, colIndex: number): string | undefined {
@@ -220,7 +231,7 @@ export class StructureStore implements IStructureStore {
     }
 
     removeChildCell(parentId: string, childId: string, region: Region): void {
-        
+
         const children = this.childrenMap.get(childId) || []
         const childrenOfParent = this.childrenMap.get(parentId) || []
         const filteredChildren = childrenOfParent.filter(id => id !== childId)
@@ -248,6 +259,7 @@ export class StructureStore implements IStructureStore {
         }
 
         this.cellRegistry.deleteCell(childId)
+        this.layoutEngine.markDirty()
     }
 
     countTotalCols(): number {

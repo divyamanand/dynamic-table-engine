@@ -7,6 +7,7 @@ export class LayoutEngine implements ILayoutEngine {
     private mergeRegistry: IMergeRegistry
     private structureStore: IStructureStore
     private cellRegistry: ICellRegistry
+    private _isLayoutDirty: boolean = false
 
     constructor(
         mergeRegistry: IMergeRegistry,
@@ -16,6 +17,10 @@ export class LayoutEngine implements ILayoutEngine {
         this.mergeRegistry = mergeRegistry
         this.structureStore = structureStore
         this.cellRegistry = cellRegistry
+    }
+
+    markDirty(): void {
+        this._isLayoutDirty = true
     }
 
     private calculateColSpan(cellId: string, res: Map<string, number>): number {
@@ -53,72 +58,101 @@ export class LayoutEngine implements ILayoutEngine {
     
     private applyLayoutForCell(
         cellId: string,
-        rowStart: number,
-        colStart: number,
-        rowSpanMap: Map<string, number>,
-        colSpanMap: Map<string, number>
+        primaryStart: number,
+        secondaryStart: number,
+        primarySpanMap: Map<string, number>,
+        secondarySpanMap: Map<string, number>,
+        orientation: "horizontal" | "vertical"
     ): void {
         const cell = this.cellRegistry.getCellById(cellId) as Cell
-        const rowSpan = rowSpanMap.get(cellId) ?? 1
-        const colSpan = colSpanMap.get(cellId) ?? 1
+        const primarySpan = primarySpanMap.get(cellId) ?? 1
+        const secondarySpan = secondarySpanMap.get(cellId) ?? 1
 
-        cell._setLayout({ row: rowStart, col: colStart, rowSpan, colSpan })
-        this.cellRegistry.setCellAddress(cellId, rowStart, colStart)
+        const row = orientation === "horizontal" ? secondaryStart : primaryStart
+        const col = orientation === "horizontal" ? primaryStart : secondaryStart
+        const rowSpan = orientation === "horizontal" ? secondarySpan : primarySpan
+        const colSpan = orientation === "horizontal" ? primarySpan : secondarySpan
 
-        const children = this.structureStore.getChildren(cellId) ?? []
-        let childColStart = colStart
+        cell._setLayout({ row, col, rowSpan, colSpan })
+        this.cellRegistry.setCellAddress(cellId, row, col)
 
-        for (const child of children) {
-            this.applyLayoutForCell(child, rowStart + rowSpan, childColStart, rowSpanMap, colSpanMap)
-            childColStart += colSpanMap.get(child) ?? 1
+        let childPrimaryStart = primaryStart
+        for (const child of this.structureStore.getChildren(cellId) ?? []) {
+            this.applyLayoutForCell(
+                child,
+                childPrimaryStart,
+                secondaryStart + secondarySpan,
+                primarySpanMap,
+                secondarySpanMap,
+                orientation
+            )
+            childPrimaryStart += primarySpanMap.get(child) ?? 1
         }
     }
 
-    applyHeaderLayout(region: Region): void {
+    applyHeaderLayout(region: Region, rowOffset: number, colOffset: number): void {
         const roots = this.structureStore.getRoots(region) ?? []
+        if (roots.length === 0) return
 
-        const maxHeight = roots.reduce((max, root) => {
-            return Math.max(max, this.structureStore.getHeightOfCell(root))
-        }, 0)
+        const orientation: "horizontal" | "vertical" =
+            region === "theader" ? "horizontal" : "vertical"
 
-        let colStart = 0
-
-        for (const root of roots) {
-            const rowSpanMap: Map<string, number> = new Map()
-            const colSpanMap: Map<string, number> = new Map()
-
-            this.calculateRowSpan(root, rowSpanMap, 1, maxHeight)
-            this.calculateColSpan(root, colSpanMap)
-
-            this.applyLayoutForCell(root, 0, colStart, rowSpanMap, colSpanMap)
-
-            colStart += colSpanMap.get(root) ?? 1
-        }
-    }
-
-    applyBodyLayout(): void {
-        const roots = this.structureStore.getRoots("theader") ?? []
-        const headerRows = roots.reduce((max, root) =>
+        const maxDepth = roots.reduce((max, root) =>
             Math.max(max, this.structureStore.getHeightOfCell(root)), 0)
 
+        const fixedOffset = orientation === "horizontal" ? rowOffset : colOffset
+        let advancingStart = orientation === "horizontal" ? colOffset : rowOffset
+
+        for (const root of roots) {
+            const primarySpanMap = new Map<string, number>()
+            const secondarySpanMap = new Map<string, number>()
+
+            this.calculateColSpan(root, primarySpanMap)
+            this.calculateRowSpan(root, secondarySpanMap, 1, maxDepth)
+
+            this.applyLayoutForCell(
+                root,
+                advancingStart,
+                fixedOffset,
+                primarySpanMap,
+                secondarySpanMap,
+                orientation
+            )
+
+            advancingStart += primarySpanMap.get(root) ?? 1
+        }
+    }
+
+    applyBodyLayout(rowOffset: number, colOffset: number): void {
         const body = this.structureStore.getBody()
         for (let r = 0; r < body.length; r++) {
             for (let c = 0; c < body[r].length; c++) {
                 const cellId = body[r][c]
-                const row = headerRows + r
+                const row = rowOffset + r
+                const col = colOffset + c
                 const cell = this.cellRegistry.getCellById(cellId) as Cell
-                cell._setLayout({ row, col: c, rowSpan: 1, colSpan: 1 })
-                this.cellRegistry.setCellAddress(cellId, row, c)
+                cell._setLayout({ row, col, rowSpan: 1, colSpan: 1 })
+                this.cellRegistry.setCellAddress(cellId, row, col)
             }
         }
     }
 
     rebuild(): void {
-        // TODO: implement
+        const lhD = (this.structureStore.getRoots("lheader") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const thD = (this.structureStore.getRoots("theader") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const thL = this.structureStore.getLeafCount("theader")
+
+        this.applyHeaderLayout("lheader", thD, 0)
+        this.applyHeaderLayout("theader", 0, lhD)
+        this.applyHeaderLayout("rheader", thD, lhD + thL)
+        this.applyBodyLayout(thD, lhD)
+
+        this._isLayoutDirty = false
     }
 
     isLayoutDirty(): boolean {
-        // TODO: implement
-        return false
+        return this._isLayoutDirty
     }
 }
