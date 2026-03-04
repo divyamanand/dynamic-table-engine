@@ -36,3 +36,33 @@ export type CellPayload = {
     style?: Style;
     computedValue?: string | number;
 }
+
+export type OverflowMode = 'wrap' | 'increase-height' | 'increase-width'
+
+export type FooterPlacement =
+    | { mode: 'every-page' }
+    | { mode: 'last-page' }
+    | { mode: 'custom'; pages: number[] }
+
+export interface PaginationSettings {
+    pageSize?: number
+    repeatHeaders?: boolean
+}
+
+export interface HeaderVisibility {
+    theader?: boolean
+    lheader?: boolean
+    rheader?: boolean
+}
+
+export interface TableSettings {
+    minRows?: number
+    maxRows?: number
+    minCols?: number
+    maxCols?: number
+    overflow?: OverflowMode
+    footer?: FooterPlacement
+    headerVisibility?: HeaderVisibility
+    defaultStyle?: Style
+    pagination?: PaginationSettings
+}

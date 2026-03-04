@@ -1,5 +1,5 @@
 import { ICell } from "../core"
-import { CellPayload, Region } from "../../types"
+import { CellPayload, Region, TableSettings } from "../../types"
 import { Rect } from "../../types/common"
 
 export interface ITable {
@@ -22,6 +22,10 @@ export interface ITable {
     // Merge
     mergeCells(rect: Rect): void
     unmergeCells(cellId: string): void
+
+    // Settings
+    getSettings(): TableSettings
+    updateSettings(settings: Partial<TableSettings>): void
 
     // Layout
     getCompleteGrid(): string[][]

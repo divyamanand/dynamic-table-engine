@@ -1,24 +1,46 @@
 import { ICellRegistry, ILayoutEngine, IMergeRegistry, IStructureStore, ITable } from "../interfaces"
 import { ICell } from "../interfaces/core"
-import { CellPayload, Region } from "../types"
+import { CellPayload, Region, TableSettings } from "../types"
 import { Rect } from "../types/common"
+
+const DEFAULT_TABLE_SETTINGS: TableSettings = {
+    overflow: 'wrap',
+    footer: { mode: 'last-page' },
+    headerVisibility: { theader: true, lheader: true, rheader: true },
+    defaultStyle: { font: 'Arial', fontSize: 10 },
+    pagination: { repeatHeaders: true }
+}
 
 export class Table implements ITable {
     private structureStore: IStructureStore
     private cellRegistry: ICellRegistry
     private layoutEngine: ILayoutEngine
     private mergeRegistry: IMergeRegistry
+    private settings: TableSettings
 
     constructor(
         structureStore: IStructureStore,
         cellRegistry: ICellRegistry,
         layoutEngine: ILayoutEngine,
-        mergeRegistry: IMergeRegistry
+        mergeRegistry: IMergeRegistry,
+        settings?: TableSettings
     ) {
         this.structureStore = structureStore
         this.cellRegistry = cellRegistry
         this.layoutEngine = layoutEngine
         this.mergeRegistry = mergeRegistry
+        this.settings = { ...DEFAULT_TABLE_SETTINGS, ...settings }
+    }
+
+    // --- Settings ---
+
+    getSettings(): TableSettings {
+        return { ...this.settings }
+    }
+
+    updateSettings(patch: Partial<TableSettings>): void {
+        this.settings = { ...this.settings, ...patch }
+        this.layoutEngine.rebuild()
     }
 
     // --- Header operations ---
@@ -82,9 +104,19 @@ export class Table implements ITable {
         for (let i = 0; i < data.length; i++) {
             this.insertBodyRow(i, data[i])
         }
+        // pad with empty rows up to minRows
+        const minRows = this.settings.minRows
+        if (minRows !== undefined) {
+            while (this.structureStore.getBody().length < minRows) {
+                this.insertBodyRow(this.structureStore.getBody().length)
+            }
+        }
     }
 
     insertBodyRow(rowIndex: number, data?: (string | number)[]): void {
+        if (this.settings.maxRows !== undefined &&
+            this.structureStore.getBody().length >= this.settings.maxRows) return
+
         const numCols = this.structureStore.getBody().length > 0
             ? this.structureStore.getBody()[0].length
             : this.structureStore.getLeafCount("theader")
@@ -97,12 +129,26 @@ export class Table implements ITable {
     }
 
     removeBodyRow(rowIndex: number): void {
+        if (this.settings.minRows !== undefined &&
+            this.structureStore.getBody().length <= this.settings.minRows) {
+            const row = this.structureStore.getBody()[rowIndex]
+            if (row) {
+                for (const cellId of row) {
+                    this.cellRegistry.updateCell(cellId, { rawValue: "", computedValue: undefined })
+                }
+            }
+            return
+        }
+
         const removedIds = this.structureStore.removeBodyRow(rowIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
         this.layoutEngine.rebuild()
     }
 
     insertBodyCol(colIndex: number, data?: (string | number)[]): void {
+        if (this.settings.maxCols !== undefined &&
+            this.structureStore.getBody()[0]?.length >= this.settings.maxCols) return
+
         const numRows = this.structureStore.getBody().length
         const cellIds: string[] = []
         for (let i = 0; i < numRows; i++) {
@@ -113,6 +159,9 @@ export class Table implements ITable {
     }
 
     removeBodyCol(colIndex: number): void {
+        if (this.settings.minCols !== undefined &&
+            this.structureStore.getBody()[0]?.length <= this.settings.minCols) return
+
         const removedIds = this.structureStore.removeBodyCol(colIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
         this.layoutEngine.rebuild()
