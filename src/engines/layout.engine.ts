@@ -125,17 +125,41 @@ export class LayoutEngine implements ILayoutEngine {
 
     applyBodyLayout(rowOffset: number, colOffset: number): void {
         const body = this.structureStore.getBody()
+        const merges = this.mergeRegistry.getMergeSet()
+        const skips = new Set<string>()
+
         for (let r = 0; r < body.length; r++) {
             for (let c = 0; c < body[r].length; c++) {
+                if (skips.has(`${r}:${c}`)) continue
+
                 const cellId = body[r][c]
+                let rowSpan = 1
+                let colSpan = 1
+
+                if (merges.has(cellId)) {
+                    const { startRow, startCol, endRow, endCol } = merges.get(cellId)!
+                    rowSpan = endRow - startRow + 1
+                    colSpan = endCol - startCol + 1
+
+                    // mark children as skipped (body-local coords)
+                    for (let mr = r; mr < r + rowSpan; mr++) {
+                        for (let mc = c; mc < c + colSpan; mc++) {
+                            if (mr !== r || mc !== c) {
+                                skips.add(`${mr}:${mc}`)
+                            }
+                        }
+                    }
+                }
+
                 const row = rowOffset + r
                 const col = colOffset + c
                 const cell = this.cellRegistry.getCellById(cellId) as Cell
-                cell._setLayout({ row, col, rowSpan: 1, colSpan: 1 })
+                cell._setLayout({ row, col, rowSpan, colSpan })
                 this.cellRegistry.setCellAddress(cellId, row, col)
             }
         }
-    }
+}
+
 
     rebuild(): void {
         const lhD = (this.structureStore.getRoots("lheader") ?? [])

@@ -26,6 +26,7 @@ export type Rect = {
    startCol: number
    endRow: number
    endCol: number
+   primaryRegion?: Region
 }
 
 

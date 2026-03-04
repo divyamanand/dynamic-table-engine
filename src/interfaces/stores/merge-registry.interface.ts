@@ -9,4 +9,5 @@ export interface IMergeRegistry {
     isValidMerge(rect: Rect): boolean
     getMergeByRootId(cellId: string): Rect | undefined
     deleteMerge(cellId: string): void
+    getMergeSet(): Map<string, Rect>
 }
