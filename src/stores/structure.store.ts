@@ -275,13 +275,17 @@ export class StructureStore implements IStructureStore {
         return this.body.length + maxTHeaderRows
     }
 
+    buildBody(data: (string | number)[][]): void {
+        while (this.body.length > 0) {
+            this.removeBodyRow(0)
+        }
+        for (let i = 0; i < data.length; i++) {
+            this.insertBodyRow(i, data[i])
+        }
+    }
+
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void {
-        
-    }
 
-    getCompleteGrid(): string[][] {
-        return [[]]
     }
-
 
 }

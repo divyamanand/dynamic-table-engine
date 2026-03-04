@@ -179,4 +179,8 @@ export class LayoutEngine implements ILayoutEngine {
     isLayoutDirty(): boolean {
         return this._isLayoutDirty
     }
+
+    getCompleteGrid(): string[][] {
+        return [[]]
+    }
 }

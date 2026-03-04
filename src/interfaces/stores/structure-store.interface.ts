@@ -21,6 +21,7 @@ export interface IStructureStore {
     // BODY GRID (2D Ordered Structure)
     // =====================================================
     
+    buildBody(data: (string | number)[][]): void
     insertBodyRow(rowIndex: number, data?: (string | number)[]): void
     removeBodyRow(rowIndex: number): void
 
@@ -37,7 +38,6 @@ export interface IStructureStore {
     countTotalCols(): number
 
     getLeafCells(cellId: string): string[]
-    getCompleteGrid(): string[][]
     getHeightOfCell(cellId: string): number
     isLeafCell(cellId: string): boolean
     getLeafCount(region: Region): number
