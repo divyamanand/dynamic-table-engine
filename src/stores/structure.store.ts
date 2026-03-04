@@ -1,4 +1,4 @@
-import { ICellRegistry, ILayoutEngine, IStructureStore } from "../interfaces";
+import { IStructureStore } from "../interfaces";
 import { Region } from "../types";
 
 export class StructureStore implements IStructureStore {
@@ -6,24 +6,16 @@ export class StructureStore implements IStructureStore {
     private childrenMap: Map<string, string[]>
     private parentMap: Map<string, string>
     private body: string[][]
-    public layoutEngine: ILayoutEngine
-    public cellRegistry: ICellRegistry
 
-    constructor (
-        layoutEngine: ILayoutEngine,
-        cellRegistry: ICellRegistry
-    ) {
+    constructor() {
         this.headerRoots = new Map()
         this.body = []
         this.parentMap = new Map()
         this.childrenMap = new Map()
-        this.layoutEngine = layoutEngine
-        this.cellRegistry = cellRegistry
     }
 
-  
-    private setRegionStructure(region: Region, arr: string[] | string[][]): void {
-        this.headerRoots.set(region, arr as string[])
+    private setRegionStructure(region: Region, arr: string[]): void {
+        this.headerRoots.set(region, arr)
     }
 
     isLeafCell(cellId: string): boolean {
@@ -38,7 +30,7 @@ export class StructureStore implements IStructureStore {
         const res = []
 
         for (const child of children) {
-            if (this.isLeafCell(child)){
+            if (this.isLeafCell(child)) {
                 res.push(child)
             } else {
                 res.push(...this.getLeafCells(child))
@@ -48,7 +40,7 @@ export class StructureStore implements IStructureStore {
         return res
     }
 
-    private getBodyIndexForHeaderLeafCell(region:Region, cellId: string): number {
+    getBodyIndexForHeaderLeafCell(region: Region, cellId: string): number {
         let index = 0
         const headers = this.headerRoots.get(region) || []
 
@@ -62,7 +54,6 @@ export class StructureStore implements IStructureStore {
             }
         }
         return -1
-
     }
 
     private getTotalLeafCount(region: Region): number {
@@ -82,140 +73,95 @@ export class StructureStore implements IStructureStore {
         }
 
         return 1 + maxHeight
-
     }
 
     getLeafCount(region: Region): number {
         return this.getTotalLeafCount(region)
     }
 
-    insertBodyCol(colIndex: number, data?: (string | number)[]): void {
-        this.body = this.body.map((bodyRow, rowIdx) => {
-            const newCell = this.cellRegistry.createCell("body", data?.[rowIdx]?.toString())
-            const updatedRow = [...bodyRow]
-            updatedRow.splice(colIndex, 0, newCell)
-            return updatedRow
-        })
-        this.layoutEngine.markDirty()
-    }
-
-    removeBodyCol(colIndex: number): void {
-        this.body = this.body.map((bodyRow) => {
-            const updatedRow = bodyRow.filter((bodyVal, idx) => colIndex !== idx )
-            return updatedRow
-        })
-        this.layoutEngine.markDirty()
-    }
-
     addRootCell(cellId: string, region: Region): void {
         const cellRegion = this.headerRoots.get(region) || []
-        const updatedCellRegion = [...cellRegion, cellId]
-
-        if (region === "theader") {
-            const colIndex = this.getTotalLeafCount("theader")
-            this.setRegionStructure(region, updatedCellRegion)
-            this.insertBodyCol(colIndex)
-        } else if (region === "lheader" || region === "rheader") {
-            const rowIndex = this.getTotalLeafCount(region)
-            this.setRegionStructure(region, updatedCellRegion)
-            this.insertBodyRow(rowIndex)
-        } else {
-            this.setRegionStructure(region, updatedCellRegion)
-        }
-        this.layoutEngine.markDirty()
+        this.setRegionStructure(region, [...cellRegion, cellId])
     }
+
     removeRootCell(cellId: string, region: Region): void {
         const cellRegion = this.headerRoots.get(region)
-        const rootCellIndex = this.getBodyIndexForHeaderLeafCell(region, cellId)
         const children = this.childrenMap.get(cellId) || []
-
         const filteredRegion = cellRegion?.filter((id) => id !== cellId) || []
-        const updatedCellRegion = [...filteredRegion, ...children]
-        this.setRegionStructure(region, updatedCellRegion)
-
-        if (this.isLeafCell(cellId)) {
-            if (region === "theader") {
-                this.removeBodyCol(rootCellIndex)
-            } else if (region === "lheader" || region === "rheader") {
-                this.removeBodyRow(rootCellIndex)
-            }
-        }
+        this.setRegionStructure(region, [...filteredRegion, ...children])
 
         if (this.childrenMap.has(cellId)) {
             this.childrenMap.delete(cellId)
         }
-
         for (const child of children) {
             this.parentMap.delete(child)
         }
-
-        this.cellRegistry.deleteCell(cellId)
-        this.layoutEngine.markDirty()
     }
 
     getRoots(region: Region): readonly string[] | undefined {
         return this.headerRoots.get(region)
     }
 
-    addChildCell(parentId: string, region: Region, childId?: string, index?: number): void {
-        let child = childId
-        if (!child) {
-            child = this.cellRegistry.createCell(region)
-        }
-
-        const wasLeaf = this.isLeafCell(parentId)
-
-        this.parentMap.set(child, parentId)
+    addChildCell(parentId: string, region: Region, childId: string, index?: number): void {
+        this.parentMap.set(childId, parentId)
         let children = this.childrenMap.get(parentId)
         if (!children) {
             children = []
             this.childrenMap.set(parentId, children)
         }
         if (index !== undefined) {
-            children.splice(index, 0, child)
+            children.splice(index, 0, childId)
         } else {
-            children.push(child)
+            children.push(childId)
         }
-
-        if (!wasLeaf) {
-            const newLeafIndex = this.getBodyIndexForHeaderLeafCell(region, child)
-            if (region === "theader") {
-                this.insertBodyCol(newLeafIndex)
-            } else if (region === "lheader" || region === "rheader") {
-                this.insertBodyRow(newLeafIndex)
-            }
-        }
-        this.layoutEngine.markDirty()
     }
 
     getChildren(parentId: string): readonly string[] | undefined {
         return this.childrenMap.get(parentId)
     }
 
-    insertBodyRow(rowIndex: number, data?: (string | number)[]): void {
-        const numColumns = this.body.length > 0
-            ? this.body[0].length
-            : this.getTotalLeafCount("theader")
-        const newRow: string[] = []
-
-        for (let i = 0; i < numColumns; i++) {
-            const newCell = this.cellRegistry.createCell("body", data?.[i]?.toString())
-            newRow.push(newCell)
-        }
-
-        this.body.splice(rowIndex, 0, newRow)
-        this.layoutEngine.markDirty()
+    insertBodyRow(rowIndex: number, cellIds: string[]): void {
+        this.body.splice(rowIndex, 0, cellIds)
     }
 
-    removeBodyRow(rowIndex: number): void {
+    removeBodyRow(rowIndex: number): string[] {
         if (rowIndex >= 0 && rowIndex < this.body.length) {
-            const removedRow = this.body.splice(rowIndex, 1)[0]
-
-            for (const cellId of removedRow) {
-                this.cellRegistry.deleteCell(cellId)
-            }
+            return this.body.splice(rowIndex, 1)[0]
         }
-        this.layoutEngine.markDirty()
+        return []
+    }
+
+    insertBodyCol(colIndex: number, cellIds: string[]): void {
+        this.body = this.body.map((bodyRow, rowIdx) => {
+            const updatedRow = [...bodyRow]
+            updatedRow.splice(colIndex, 0, cellIds[rowIdx])
+            return updatedRow
+        })
+    }
+
+    removeBodyCol(colIndex: number): string[] {
+        const removed: string[] = []
+        this.body = this.body.map((bodyRow) => {
+            removed.push(bodyRow[colIndex])
+            return bodyRow.filter((_, idx) => colIndex !== idx)
+        })
+        return removed
+    }
+
+    removeChildCell(parentId: string, childId: string, region: Region): void {
+        const children = this.childrenMap.get(childId) || []
+        const childrenOfParent = this.childrenMap.get(parentId) || []
+        const filteredChildren = childrenOfParent.filter(id => id !== childId)
+        const updatedChildren = [...filteredChildren, ...children]
+
+        if (this.childrenMap.has(childId)) {
+            this.childrenMap.delete(childId)
+        }
+        this.childrenMap.set(parentId, updatedChildren)
+        this.parentMap.delete(childId)
+        for (const child of children) {
+            this.parentMap.set(child, parentId)
+        }
     }
 
     getBodyCell(rowIndex: number, colIndex: number): string | undefined {
@@ -228,38 +174,6 @@ export class StructureStore implements IStructureStore {
 
     getBody(): readonly (readonly string[])[] {
         return this.body
-    }
-
-    removeChildCell(parentId: string, childId: string, region: Region): void {
-
-        const children = this.childrenMap.get(childId) || []
-        const childrenOfParent = this.childrenMap.get(parentId) || []
-        const filteredChildren = childrenOfParent.filter(id => id !== childId)
-        const updatedChildren = [...filteredChildren, ...children]
-
-
-        if (this.isLeafCell(childId)) {
-            const index = this.getBodyIndexForHeaderLeafCell(region, childId)
-            if (region === "theader") {
-                this.removeBodyCol(index)
-            } else if (region === "lheader" || region === "rheader") {
-                this.removeBodyRow(index)
-            }
-        }
-
-        if (this.childrenMap.has(childId)) {
-            this.childrenMap.delete(childId)
-        }
-
-        this.childrenMap.set(parentId, updatedChildren)
-        this.parentMap.delete(childId)
-
-        for (const child of children) {
-            this.parentMap.set(child, parentId)
-        }
-
-        this.cellRegistry.deleteCell(childId)
-        this.layoutEngine.markDirty()
     }
 
     countTotalCols(): number {
@@ -275,17 +189,7 @@ export class StructureStore implements IStructureStore {
         return this.body.length + maxTHeaderRows
     }
 
-    buildBody(data: (string | number)[][]): void {
-        while (this.body.length > 0) {
-            this.removeBodyRow(0)
-        }
-        for (let i = 0; i < data.length; i++) {
-            this.insertBodyRow(i, data[i])
-        }
-    }
-
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void {
 
     }
-
 }

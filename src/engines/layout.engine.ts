@@ -7,8 +7,6 @@ export class LayoutEngine implements ILayoutEngine {
     private mergeRegistry: IMergeRegistry
     private structureStore: IStructureStore
     private cellRegistry: ICellRegistry
-    private _isLayoutDirty: boolean = false
-
     constructor(
         mergeRegistry: IMergeRegistry,
         structureStore: IStructureStore,
@@ -19,9 +17,6 @@ export class LayoutEngine implements ILayoutEngine {
         this.cellRegistry = cellRegistry
     }
 
-    markDirty(): void {
-        this._isLayoutDirty = true
-    }
 
     private calculateColSpan(cellId: string, res: Map<string, number>): number {
         if (this.structureStore.isLeafCell(cellId)) {
@@ -173,12 +168,8 @@ export class LayoutEngine implements ILayoutEngine {
         this.applyHeaderLayout("rheader", thD, lhD + thL)
         this.applyBodyLayout(thD, lhD)
 
-        this._isLayoutDirty = false
     }
 
-    isLayoutDirty(): boolean {
-        return this._isLayoutDirty
-    }
 
     getCompleteGrid(): string[][] {
         return [[]]

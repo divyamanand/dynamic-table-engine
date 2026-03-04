@@ -11,6 +11,8 @@ export interface ITable {
     buildBody(data: (string | number)[][]): void
     insertBodyRow(rowIndex: number, data?: (string | number)[]): void
     removeBodyRow(rowIndex: number): void
+    insertBodyCol(colIndex: number, data?: (string | number)[]): void
+    removeBodyCol(colIndex: number): void
 
     // Cell access
     getCellById(cellId: string): ICell | undefined
@@ -22,6 +24,5 @@ export interface ITable {
     unmergeCells(cellId: string): void
 
     // Layout
-    rebuild(): void
     getCompleteGrid(): string[][]
 }

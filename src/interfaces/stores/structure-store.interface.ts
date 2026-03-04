@@ -10,37 +10,38 @@ export interface IStructureStore {
     addRootCell(cellId: string, region: Region): void
     removeRootCell(cellId: string, region: Region): void
     getRoots(region: Region): readonly string[] | undefined
-    
+
     // Parent-Child
-    addChildCell(parentId: string, region: Region, childId?: string, index?: number): void
+    addChildCell(parentId: string, region: Region, childId: string, index?: number): void
     removeChildCell(parentId: string, childId: string, region: Region): void
     getChildren(parentId: string): readonly string[] | undefined
-    
-    
+
+
     // =====================================================
     // BODY GRID (2D Ordered Structure)
     // =====================================================
-    
-    buildBody(data: (string | number)[][]): void
-    insertBodyRow(rowIndex: number, data?: (string | number)[]): void
-    removeBodyRow(rowIndex: number): void
 
-    // insertBodyCell(rowIndex: number, colIndex: number, cellId: string): void
-    // removeBodyCell(rowIndex: number, colIndex: number): void
+    insertBodyRow(rowIndex: number, cellIds: string[]): void
+    removeBodyRow(rowIndex: number): string[]
 
-    insertBodyCol(colIndex: number, data?: (string | number)[]): void
-    removeBodyCol(colIndex: number): void
-    
+    insertBodyCol(colIndex: number, cellIds: string[]): void
+    removeBodyCol(colIndex: number): string[]
+
     getBodyCell(rowIndex: number, colIndex: number): string | undefined
     getBody(): readonly (readonly string[])[]
 
     countTotalRows(): number
     countTotalCols(): number
 
+    // =====================================================
+    // TREE QUERIES
+    // =====================================================
+
     getLeafCells(cellId: string): string[]
     getHeightOfCell(cellId: string): number
     isLeafCell(cellId: string): boolean
     getLeafCount(region: Region): number
+    getBodyIndexForHeaderLeafCell(region: Region, cellId: string): number
 
     reorderHeaderCell(region: Region, fromIndex: number, toIndex: number, withChildren?: boolean): void
 }
