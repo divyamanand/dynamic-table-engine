@@ -11,6 +11,15 @@ export interface CellLayout {
     readonly col: number;
     readonly rowSpan: number;
     readonly colSpan: number;
+    readonly x: number;       // mm from table left edge
+    readonly y: number;       // mm from table top edge
+    readonly width: number;   // mm (sum of spanned column widths)
+    readonly height: number;  // mm (sum of spanned row heights)
+}
+
+export interface TablePosition {
+    x: number;    // mm from page left
+    y: number;    // mm from page top
 }
 
 export type Region = 'theader' | 'lheader' | 'rheader' | 'footer' | 'body'

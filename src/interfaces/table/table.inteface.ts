@@ -1,5 +1,5 @@
 import { ICell } from "../core"
-import { CellPayload, Region, TableSettings } from "../../types"
+import { CellPayload, Region, TableSettings, TablePosition } from "../../types"
 import { Rect } from "../../types/common"
 
 export interface ITable {
@@ -26,6 +26,16 @@ export interface ITable {
     // Settings
     getSettings(): TableSettings
     updateSettings(settings: Partial<TableSettings>): void
+
+    // Geometry
+    setColumnWidth(colIndex: number, width: number): void
+    setRowHeight(rowIndex: number, height: number): void
+    setDefaultCellWidth(width: number): void
+    setDefaultCellHeight(height: number): void
+    getColumnWidths(): number[]
+    getRowHeights(): number[]
+    setTablePosition(position: TablePosition): void
+    getTablePosition(): TablePosition
 
     // Layout
     getCompleteGrid(): string[][]

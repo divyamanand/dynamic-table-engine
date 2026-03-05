@@ -125,6 +125,7 @@ export class Table implements ITable {
             cellIds.push(this.cellRegistry.createCell("body", data?.[i]?.toString()))
         }
         this.structureStore.insertBodyRow(rowIndex, cellIds)
+        this.layoutEngine.insertRowHeight(rowIndex, this.layoutEngine.getDefaultCellHeight())
         this.layoutEngine.rebuild()
     }
 
@@ -142,6 +143,7 @@ export class Table implements ITable {
 
         const removedIds = this.structureStore.removeBodyRow(rowIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
+        this.layoutEngine.removeRowHeight(rowIndex)
         this.layoutEngine.rebuild()
     }
 
@@ -155,6 +157,7 @@ export class Table implements ITable {
             cellIds.push(this.cellRegistry.createCell("body", data?.[i]?.toString()))
         }
         this.structureStore.insertBodyCol(colIndex, cellIds)
+        this.layoutEngine.insertColumnWidth(colIndex, this.layoutEngine.getDefaultCellWidth())
         this.layoutEngine.rebuild()
     }
 
@@ -164,6 +167,7 @@ export class Table implements ITable {
 
         const removedIds = this.structureStore.removeBodyCol(colIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
+        this.layoutEngine.removeColumnWidth(colIndex)
         this.layoutEngine.rebuild()
     }
 
@@ -191,6 +195,42 @@ export class Table implements ITable {
     unmergeCells(cellId: string): void {
         this.mergeRegistry.deleteMerge(cellId)
         this.layoutEngine.rebuild()
+    }
+
+    // --- Geometry ---
+
+    setColumnWidth(colIndex: number, width: number): void {
+        this.layoutEngine.setColumnWidth(colIndex, width)
+        this.layoutEngine.rebuildGeometry()
+    }
+
+    setRowHeight(rowIndex: number, height: number): void {
+        this.layoutEngine.setRowHeight(rowIndex, height)
+        this.layoutEngine.rebuildGeometry()
+    }
+
+    setDefaultCellWidth(width: number): void {
+        this.layoutEngine.setDefaultCellWidth(width)
+    }
+
+    setDefaultCellHeight(height: number): void {
+        this.layoutEngine.setDefaultCellHeight(height)
+    }
+
+    getColumnWidths(): number[] {
+        return this.layoutEngine.getColumnWidths()
+    }
+
+    getRowHeights(): number[] {
+        return this.layoutEngine.getRowHeights()
+    }
+
+    setTablePosition(position: { x: number; y: number }): void {
+        this.layoutEngine.setTablePosition(position)
+    }
+
+    getTablePosition(): { x: number; y: number } {
+        return this.layoutEngine.getTablePosition()
     }
 
     // --- Layout ---

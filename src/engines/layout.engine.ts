@@ -1,12 +1,18 @@
 import { ICellRegistry, ILayoutEngine, IMergeRegistry, IStructureStore } from "../interfaces";
 import { Cell } from "../core/cell";
-import { Region } from "../types";
+import { Region, TablePosition } from "../types";
 
 export class LayoutEngine implements ILayoutEngine {
 
     private mergeRegistry: IMergeRegistry
     private structureStore: IStructureStore
     private cellRegistry: ICellRegistry
+    private tablePosition: TablePosition = { x: 0, y: 0 }
+    private columnWidths: number[] = []
+    private rowHeights: number[] = []
+    private defaultCellWidth: number = 30    // mm
+    private defaultCellHeight: number = 10   // mm
+
     constructor(
         mergeRegistry: IMergeRegistry,
         structureStore: IStructureStore,
@@ -68,7 +74,7 @@ export class LayoutEngine implements ILayoutEngine {
         const rowSpan = orientation === "horizontal" ? secondarySpan : primarySpan
         const colSpan = orientation === "horizontal" ? primarySpan : secondarySpan
 
-        cell._setLayout({ row, col, rowSpan, colSpan })
+        cell._setLayout({ row, col, rowSpan, colSpan, x: 0, y: 0, width: 0, height: 0 })
         this.cellRegistry.setCellAddress(cellId, row, col)
 
         let childPrimaryStart = primaryStart
@@ -149,14 +155,117 @@ export class LayoutEngine implements ILayoutEngine {
                 const row = rowOffset + r
                 const col = colOffset + c
                 const cell = this.cellRegistry.getCellById(cellId) as Cell
-                cell._setLayout({ row, col, rowSpan, colSpan })
+                cell._setLayout({ row, col, rowSpan, colSpan, x: 0, y: 0, width: 0, height: 0 })
                 this.cellRegistry.setCellAddress(cellId, row, col)
             }
         }
-}
+    }
+
+    // Dimension array management
+    setColumnWidth(colIndex: number, width: number): void {
+        if (colIndex >= 0 && colIndex < this.columnWidths.length)
+            this.columnWidths[colIndex] = width
+    }
+
+    setRowHeight(rowIndex: number, height: number): void {
+        if (rowIndex >= 0 && rowIndex < this.rowHeights.length)
+            this.rowHeights[rowIndex] = height
+    }
+
+    insertColumnWidth(colIndex: number, width: number): void {
+        this.columnWidths.splice(colIndex, 0, width)
+    }
+
+    removeColumnWidth(colIndex: number): void {
+        this.columnWidths.splice(colIndex, 1)
+    }
+
+    insertRowHeight(rowIndex: number, height: number): void {
+        this.rowHeights.splice(rowIndex, 0, height)
+    }
+
+    removeRowHeight(rowIndex: number): void {
+        this.rowHeights.splice(rowIndex, 1)
+    }
+
+    setDefaultCellWidth(width: number): void { this.defaultCellWidth = width }
+    setDefaultCellHeight(height: number): void { this.defaultCellHeight = height }
+    getDefaultCellWidth(): number { return this.defaultCellWidth }
+    getDefaultCellHeight(): number { return this.defaultCellHeight }
+    getColumnWidths(): number[] { return [...this.columnWidths] }
+    getRowHeights(): number[] { return [...this.rowHeights] }
+    setTablePosition(pos: TablePosition): void { this.tablePosition = { ...pos } }
+    getTablePosition(): TablePosition { return { ...this.tablePosition } }
+
+    // Ensure dimension arrays match grid size (called in rebuildGeometry)
+    private initDimensions(): void {
+        const lhD = (this.structureStore.getRoots("lheader") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const thL = this.structureStore.getLeafCount("theader")
+        const rhD = (this.structureStore.getRoots("rheader") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const totalCols = lhD + thL + rhD
+
+        const thD = (this.structureStore.getRoots("theader") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const bodyRows = this.structureStore.getBody().length
+        const totalRows = thD + bodyRows
+
+        // Grow arrays if needed (pad with defaults), never shrink automatically
+        while (this.columnWidths.length < totalCols)
+            this.columnWidths.push(this.defaultCellWidth)
+        while (this.rowHeights.length < totalRows)
+            this.rowHeights.push(this.defaultCellHeight)
+
+        // Trim if grid shrank (e.g. after delete)
+        if (this.columnWidths.length > totalCols)
+            this.columnWidths.length = totalCols
+        if (this.rowHeights.length > totalRows)
+            this.rowHeights.length = totalRows
+    }
+
+    // Compute x/y/width/height via prefix sums
+    private applyGeometry(): void {
+        const colPrefixSums = [0]
+        for (let i = 0; i < this.columnWidths.length; i++)
+            colPrefixSums.push(colPrefixSums[i] + this.columnWidths[i])
+
+        const rowPrefixSums = [0]
+        for (let i = 0; i < this.rowHeights.length; i++)
+            rowPrefixSums.push(rowPrefixSums[i] + this.rowHeights[i])
+
+        const computeForCell = (cellId: string) => {
+            const cell = this.cellRegistry.getCellById(cellId) as Cell
+            const layout = cell.layout
+            if (!layout) return
+
+            const x = colPrefixSums[layout.col] ?? 0
+            const y = rowPrefixSums[layout.row] ?? 0
+            const width = (colPrefixSums[layout.col + layout.colSpan] ?? colPrefixSums[colPrefixSums.length - 1]) - x
+            const height = (rowPrefixSums[layout.row + layout.rowSpan] ?? rowPrefixSums[rowPrefixSums.length - 1]) - y
+
+            cell._setLayout({ ...layout, x, y, width, height })
+        }
+
+        // Walk header trees
+        for (const region of ['theader', 'lheader', 'rheader'] as const) {
+            const walkTree = (cellId: string) => {
+                computeForCell(cellId)
+                for (const child of this.structureStore.getChildren(cellId) ?? [])
+                    walkTree(child)
+            }
+            for (const root of this.structureStore.getRoots(region) ?? [])
+                walkTree(root)
+        }
+
+        // Walk body cells
+        for (const row of this.structureStore.getBody())
+            for (const cellId of row)
+                computeForCell(cellId)
+    }
 
 
-    rebuild(): void {
+    rebuildLayout(): void {
         const lhD = (this.structureStore.getRoots("lheader") ?? [])
             .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
         const thD = (this.structureStore.getRoots("theader") ?? [])
@@ -167,7 +276,16 @@ export class LayoutEngine implements ILayoutEngine {
         this.applyHeaderLayout("theader", 0, lhD)
         this.applyHeaderLayout("rheader", thD, lhD + thL)
         this.applyBodyLayout(thD, lhD)
+    }
 
+    rebuildGeometry(): void {
+        this.initDimensions()
+        this.applyGeometry()
+    }
+
+    rebuild(): void {
+        this.rebuildLayout()
+        this.rebuildGeometry()
     }
 
 
