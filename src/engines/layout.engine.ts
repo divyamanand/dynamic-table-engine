@@ -96,7 +96,7 @@ export class LayoutEngine implements ILayoutEngine {
         if (roots.length === 0) return
 
         const orientation: "horizontal" | "vertical" =
-            region === "theader" ? "horizontal" : "vertical"
+            (region === "theader" || region === "footer") ? "horizontal" : "vertical"
 
         const maxDepth = roots.reduce((max, root) =>
             Math.max(max, this.structureStore.getHeightOfCell(root)), 0)
@@ -209,7 +209,9 @@ export class LayoutEngine implements ILayoutEngine {
         const thD = (this.structureStore.getRoots("theader") ?? [])
             .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
         const bodyRows = this.structureStore.getBody().length
-        const totalRows = thD + bodyRows
+        const footerD = (this.structureStore.getRoots("footer") ?? [])
+            .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
+        const totalRows = thD + bodyRows + footerD
 
         // Grow arrays if needed (pad with defaults), never shrink automatically
         while (this.columnWidths.length < totalCols)
@@ -248,7 +250,7 @@ export class LayoutEngine implements ILayoutEngine {
         }
 
         // Walk header trees
-        for (const region of ['theader', 'lheader', 'rheader'] as const) {
+        for (const region of ['theader', 'lheader', 'rheader', 'footer'] as const) {
             const walkTree = (cellId: string) => {
                 computeForCell(cellId)
                 for (const child of this.structureStore.getChildren(cellId) ?? [])
@@ -271,11 +273,13 @@ export class LayoutEngine implements ILayoutEngine {
         const thD = (this.structureStore.getRoots("theader") ?? [])
             .reduce((max, r) => Math.max(max, this.structureStore.getHeightOfCell(r)), 0)
         const thL = this.structureStore.getLeafCount("theader")
+        const bodyRows = this.structureStore.getBody().length
 
         this.applyHeaderLayout("lheader", thD, 0)
         this.applyHeaderLayout("theader", 0, lhD)
         this.applyHeaderLayout("rheader", thD, lhD + thL)
         this.applyBodyLayout(thD, lhD)
+        this.applyHeaderLayout("footer", thD + bodyRows, lhD)
     }
 
     rebuildGeometry(): void {
