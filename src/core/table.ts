@@ -19,26 +19,22 @@ export class Table implements ITable {
     private layoutEngine: ILayoutEngine
     private mergeRegistry: IMergeRegistry
     private settings: TableSettings
-    private ruleEngine?: IRuleEngine
+    private ruleEngine: IRuleEngine
 
     constructor(
         structureStore: IStructureStore,
         cellRegistry: ICellRegistry,
         layoutEngine: ILayoutEngine,
         mergeRegistry: IMergeRegistry,
+        ruleEngine: IRuleEngine,
         settings?: TableSettings
     ) {
         this.structureStore = structureStore
         this.cellRegistry = cellRegistry
         this.layoutEngine = layoutEngine
         this.mergeRegistry = mergeRegistry
+        this.ruleEngine = ruleEngine
         this.settings = { ...DEFAULT_TABLE_SETTINGS, ...settings }
-    }
-
-    // --- Rule engine ---
-
-    setRuleEngine(engine: IRuleEngine): void {
-        this.ruleEngine = engine
     }
 
     getEvaluationResult(cellId: string): EvaluationResult | undefined {

@@ -43,7 +43,5 @@ export interface ITable {
     // Layout
     getCompleteGrid(): string[][]
 
-    // Rule engine
-    setRuleEngine(engine: IRuleEngine): void
     getEvaluationResult(cellId: string): EvaluationResult | undefined
 }
