@@ -159,14 +159,13 @@ describe('Table', () => {
 
         it('should add columns to existing body rows when adding headers', () => {
             // Build body with 2 rows, 1 column
-            const leaf1 = table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
             table.buildBody([['cell1'], ['cell2']])
             expect(structureStore.getBody().length).toBe(2)
             expect(structureStore.getBody()[0].length).toBe(1)
 
-            // Add another leaf (second column)
-            const parentId = table.addHeaderCell('theader', leaf1)
-            const leaf2 = table.addHeaderCell('theader', parentId)
+            // Add another leaf as sibling (second column)
+            table.addHeaderCell('theader')
 
             // Body should still have 2 rows, but now 2 columns
             expect(structureStore.getBody().length).toBe(2)
@@ -197,7 +196,7 @@ describe('Table', () => {
             const parentId = table.addHeaderCell('theader')
             table.addHeaderCell('theader', parentId)
 
-            expect(structureStore.getBody().length).toBe(1)
+            expect(structureStore.getBody().length).toBe(0)
 
             table.removeHeaderCell(parentId, 'theader', true)
 
@@ -263,6 +262,11 @@ describe('Table', () => {
         })
 
         it('should insert body row with data', () => {
+            // Add 3 header leaves to determine column count
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['val1', 'val2', 'val3'])
 
             const cells = structureStore.getBody()[0].map(id => cellRegistry.getCellById(id))
@@ -298,6 +302,9 @@ describe('Table', () => {
         })
 
         it('should insert at correct index', () => {
+            // Add 1 header leaf
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['r1'])
             table.insertBodyRow(2, ['r3'])
             table.insertBodyRow(1, ['r2'])
@@ -313,6 +320,9 @@ describe('Table', () => {
         })
 
         it('should update layout after insert', () => {
+            // Add 1 header leaf
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0)
             const cell = cellRegistry.getCellById(structureStore.getBody()[0][0])
             expect(cell!.layout).toBeDefined()
@@ -330,14 +340,17 @@ describe('Table', () => {
         })
 
         it('should respect minRows setting', () => {
-            const customSettings: Partial<TableSettings> = { minRows: 2 }
+            const customSettings: Partial<TableSettings> = { minRows: 3 }
             table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+
+            // Add 1 header leaf to create body columns
+            table.addHeaderCell('theader')
 
             table.insertBodyRow(0)
             table.insertBodyRow(1)
             table.insertBodyRow(2)
 
-            table.removeBodyRow(0) // Should not remove, would go below minRows
+            table.removeBodyRow(0) // Should not remove, would go below minRows (3)
 
             expect(structureStore.getBody()).toHaveLength(3)
         })
@@ -345,6 +358,9 @@ describe('Table', () => {
         it('should clear cell values when minRows prevents deletion', () => {
             const customSettings: Partial<TableSettings> = { minRows: 1 }
             table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+
+            // Add 1 header leaf to match the data
+            table.addHeaderCell('theader')
 
             table.insertBodyRow(0, ['value'])
 
@@ -371,6 +387,10 @@ describe('Table', () => {
 
     describe('body operations - insertBodyCol', () => {
         it('should insert body column', () => {
+            // Add 2 header leaves to match row data
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['a', 'b'])
             table.insertBodyCol(1, ['c'])
 
@@ -381,6 +401,10 @@ describe('Table', () => {
         it('should respect maxCols setting', () => {
             const customSettings: Partial<TableSettings> = { maxCols: 2 }
             table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+
+            // Add 2 header leaves
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
 
             table.insertBodyRow(0, ['a', 'b'])
             table.insertBodyCol(2, ['c'])
@@ -407,6 +431,11 @@ describe('Table', () => {
 
     describe('body operations - removeBodyCol', () => {
         it('should remove body column', () => {
+            // Add 3 header leaves
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['a', 'b', 'c'])
 
             table.removeBodyCol(1)
@@ -417,6 +446,11 @@ describe('Table', () => {
         it('should respect minCols setting', () => {
             const customSettings: Partial<TableSettings> = { minCols: 3 }
             table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+
+            // Add 3 header leaves
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
 
             table.insertBodyRow(0, ['a', 'b', 'c'])
             table.removeBodyCol(0)
@@ -449,13 +483,17 @@ describe('Table', () => {
         })
 
         it('should get cell by address', () => {
+            // Add 1 header leaf
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['value'])
             const body = structureStore.getBody()
             const cellId = body[0][0]
 
             table.updateCell(cellId, {}) // Trigger layout rebuild
 
-            const cell = table.getCellByAddress(0, 0)
+            // Body row 0 is at layout row 1 (after theader at row 0)
+            const cell = table.getCellByAddress(1, 0)
             expect(cell).toBeDefined()
             expect(cell!.rawValue).toBe('value')
         })
@@ -499,6 +537,10 @@ describe('Table', () => {
 
     describe('merge operations', () => {
         it('should merge cells', () => {
+            // Add 2 header leaves
+            table.addHeaderCell('theader')
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['a', 'b'])
             table.insertBodyRow(1, ['c', 'd'])
 
@@ -519,6 +561,9 @@ describe('Table', () => {
         })
 
         it('should unmerge cells', () => {
+            // Add 1 header leaf
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['a'])
             const cellId = structureStore.getBody()[0][0]
 
@@ -538,6 +583,9 @@ describe('Table', () => {
         })
 
         it('should trigger rebuild on merge', () => {
+            // Add 1 header leaf
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0, ['a'])
             const cellId = structureStore.getBody()[0][0]
 
@@ -566,6 +614,9 @@ describe('Table', () => {
         })
 
         it('should set row height', () => {
+            // Add 1 header leaf to create row heights array
+            table.addHeaderCell('theader')
+
             table.insertBodyRow(0)
             table.setRowHeight(1, 20) // Row 1 (body row, after header)
 

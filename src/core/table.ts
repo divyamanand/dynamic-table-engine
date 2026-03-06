@@ -181,7 +181,9 @@ export class Table implements ITable {
             : this.structureStore.getLeafCount("theader")
         const cellIds: string[] = []
         for (let i = 0; i < numCols; i++) {
-            cellIds.push(this.cellRegistry.createCell("body", data?.[i]?.toString()))
+            // If data is shorter, use undefined (createCell will use default "Cell"); if longer, trim to numCols
+            const value = data?.[i]?.toString()
+            cellIds.push(this.cellRegistry.createCell("body", value))
         }
         this.structureStore.insertBodyRow(rowIndex, cellIds)
         this.layoutEngine.insertRowHeight(rowIndex, this.layoutEngine.getDefaultCellHeight())
