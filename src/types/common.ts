@@ -24,10 +24,52 @@ export interface TablePosition {
 
 export type Region = 'theader' | 'lheader' | 'rheader' | 'footer' | 'body'
 
-export type Style = {
-    font: string;
+// ---------------------------------------------------------------------------
+// Style types (pdfme-compatible)
+// ---------------------------------------------------------------------------
+
+export type Spacing = { top: number; right: number; bottom: number; left: number }
+
+export type Alignment = 'left' | 'center' | 'right' | 'justify'
+export type VerticalAlignment = 'top' | 'middle' | 'bottom'
+
+export interface CellStyle {
+    fontName?: string;
+    bold: boolean;
+    italic: boolean;
+    alignment: Alignment;
+    verticalAlignment: VerticalAlignment;
     fontSize: number;
+    lineHeight: number;
+    characterSpacing: number;
+    fontColor: string;
+    backgroundColor: string;
+    borderColor: string;
+    borderWidth: Spacing;
+    padding: Spacing;
 }
+
+/** @deprecated Use CellStyle instead */
+export type Style = CellStyle
+
+// ---------------------------------------------------------------------------
+// Table-level style types (pdfme-compatible)
+// ---------------------------------------------------------------------------
+
+export interface TableStyles {
+    borderColor: string;
+    borderWidth: number;    // outer border only, single value in mm
+}
+
+export interface BodyStyles extends CellStyle {
+    alternateBackgroundColor: string;
+}
+
+export interface ColumnStyleOverrides {
+    alignment?: Record<number, Alignment>;
+}
+
+// ---------------------------------------------------------------------------
 
 export type Rect = {
    cellId: string
@@ -42,7 +84,7 @@ export type Rect = {
 export type CellPayload = {
     inRegion?: Region;
     rawValue?: string | number;
-    style?: Style;
+    style?: Partial<CellStyle>;
     computedValue?: string | number;
 }
 
@@ -72,6 +114,10 @@ export interface TableSettings {
     overflow?: OverflowMode
     footer?: FooterPlacement
     headerVisibility?: HeaderVisibility
-    defaultStyle?: Style
+    defaultStyle?: Partial<CellStyle>
     pagination?: PaginationSettings
+    tableStyles?: TableStyles
+    headStyles?: Partial<CellStyle>
+    bodyStyles?: Partial<BodyStyles>
+    columnStyles?: ColumnStyleOverrides
 }

@@ -1,13 +1,14 @@
 import { resolveVar, getAvailableVars, VAR_CATALOG } from '../../../rules/expression/var-catalog';
 import type { EvalContext } from '../../../rules/types/evaluation.types';
 import type { ICell } from '../../../interfaces/core/cell.interface';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 function mockCell(overrides: Partial<ICell> = {}): ICell {
   return {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: 'test',
-    style: { font: 'Arial', fontSize: 12 },
+    style: { ...defaultCellStyle },
     isDynamic: false,
     layout: { row: 2, col: 3, rowSpan: 1, colSpan: 1, x: 10, y: 20, width: 50, height: 20 },
     ...overrides,
@@ -59,8 +60,8 @@ describe('VarCatalog', () => {
   // ============ VAR_CATALOG structure ============
 
   describe('catalog structure', () => {
-    it('has 10 vars defined', () => {
-      expect(Object.keys(VAR_CATALOG)).toHaveLength(10);
+    it('has 17 vars defined', () => {
+      expect(Object.keys(VAR_CATALOG)).toHaveLength(16);
     });
 
     it('has all expected cell-scoped vars', () => {
@@ -225,21 +226,21 @@ describe('VarCatalog', () => {
 
   describe('cell.fontSize', () => {
     it('returns style fontSize', () => {
-      const ctx = makeContext({ style: { font: 'Arial', fontSize: 16 } });
+      const ctx = makeContext({ style: { ...defaultCellStyle, fontSize: 16 } });
       expect(resolveVar('cell.fontSize', ctx)).toBe(16);
     });
 
     it('returns 0 when fontSize is 0 (resolver uses ?? not ||)', () => {
       // The resolver uses `cell.style?.fontSize ?? 12` which passes 0 through
       // (unlike TextMeasurer which uses `|| 12`)
-      const ctx = makeContext({ style: { font: 'Arial', fontSize: 0 } });
+      const ctx = makeContext({ style: { ...defaultCellStyle, fontSize: 0 } });
       expect(resolveVar('cell.fontSize', ctx)).toBe(0);
     });
 
-    it('defaults to 12 when cell is undefined', () => {
+    it('defaults to 13 when cell is undefined', () => {
       const ctx = makeContext();
       ctx.cell = undefined;
-      expect(resolveVar('cell.fontSize', ctx)).toBe(12);
+      expect(resolveVar('cell.fontSize', ctx)).toBe(13);
     });
   });
 
@@ -257,7 +258,7 @@ describe('VarCatalog', () => {
     it('returns true for long text in narrow cell', () => {
       const ctx = makeContext({
         rawValue: 'This is a very very long text that should definitely overflow',
-        style: { font: 'Arial', fontSize: 12 },
+        style: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 5, height: 5 },
       });
       expect(resolveVar('cell.overflows', ctx)).toBe(true);
@@ -326,8 +327,8 @@ describe('VarCatalog', () => {
   // ============ getAvailableVars ============
 
   describe('getAvailableVars()', () => {
-    it('returns all 10 vars', () => {
-      expect(getAvailableVars()).toHaveLength(10);
+    it('returns all 17 vars', () => {
+      expect(getAvailableVars()).toHaveLength(16);
     });
 
     it('all returned vars have required fields', () => {

@@ -9,8 +9,8 @@ const DEFAULT_TABLE_SETTINGS: TableSettings = {
     overflow: 'wrap',
     footer: { mode: 'last-page' },
     headerVisibility: { theader: true, lheader: true, rheader: true },
-    defaultStyle: { font: 'Arial', fontSize: 10 },
-    pagination: { repeatHeaders: true }
+    pagination: { repeatHeaders: true },
+    tableStyles: { borderColor: '#888888', borderWidth: 0.1 },
 }
 
 export class Table implements ITable {

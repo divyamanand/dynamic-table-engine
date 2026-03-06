@@ -129,7 +129,7 @@ const FUNCTION_DEFS: Record<string, FnDef> = {
       const text = String(args[0] ?? '');
       const fontSize = typeof args[1] === 'number' ? args[1] : 12;
       try {
-        const result = TextMeasurer.measureText(text, { fontSize, font: 'Arial' });
+        const result = TextMeasurer.measureText(text, { fontSize, fontName: 'Arial' });
         return result.height;
       } catch {
         return 0;
@@ -146,7 +146,7 @@ const FUNCTION_DEFS: Record<string, FnDef> = {
       const text = String(args[0] ?? '');
       const fontSize = typeof args[1] === 'number' ? args[1] : 12;
       try {
-        const result = TextMeasurer.measureText(text, { fontSize, font: 'Arial' });
+        const result = TextMeasurer.measureText(text, { fontSize, fontName: 'Arial' });
         return result.width;
       } catch {
         return 0;

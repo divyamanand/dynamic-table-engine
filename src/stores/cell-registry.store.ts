@@ -1,12 +1,26 @@
 import { Cell } from "../core";
 import { ICell, ICellRegistry } from "../interfaces";
-import { CellPayload, Region, Style } from "../types";
+import { CellPayload, CellStyle, Region } from "../types";
 import {v1 as uuid} from "uuid"
 
-export const defaultStyle = {
-    font: "Arial",
-    fontSize: 10
+export const defaultCellStyle: CellStyle = {
+    fontName: undefined,
+    bold: false,
+    italic: false,
+    alignment: 'left',
+    verticalAlignment: 'middle',
+    fontSize: 13,
+    lineHeight: 1,
+    characterSpacing: 0,
+    fontColor: '#000000',
+    backgroundColor: '',
+    borderColor: '#888888',
+    borderWidth: { top: 0.1, right: 0.1, bottom: 0.1, left: 0.1 },
+    padding: { top: 5, right: 5, bottom: 5, left: 5 },
 }
+
+/** @deprecated Use defaultCellStyle instead */
+export const defaultStyle = defaultCellStyle
 
 export class CellRegistry implements ICellRegistry {
 
@@ -41,9 +55,10 @@ export class CellRegistry implements ICellRegistry {
         }
     }
 
-    createCell(region: Region, rawValue?: string, style?: Style, isDynamic?: boolean): string {
+    createCell(region: Region, rawValue?: string, style?: Partial<CellStyle>, isDynamic?: boolean): string {
         const randomId = uuid()
-        const newCell = new Cell(randomId, region, rawValue ?? "Cell", isDynamic ?? false, style ?? defaultStyle)
+        const mergedStyle: CellStyle = { ...defaultCellStyle, ...style }
+        const newCell = new Cell(randomId, region, rawValue ?? "Cell", isDynamic ?? false, mergedStyle)
         this.cellsById.set(randomId, newCell)
         return randomId
     }
@@ -62,21 +77,21 @@ export class CellRegistry implements ICellRegistry {
         const cell = this.cellsById.get(cellId)
         if (cell) {
             const {inRegion, rawValue, computedValue, style} = payload
-            
+
             if (inRegion) {
                 cell.inRegion = inRegion
             }
 
-            if (rawValue) {
+            if (rawValue !== undefined) {
                 cell.rawValue = rawValue
             }
 
-            if (computedValue) {
+            if (computedValue !== undefined) {
                 cell.computedValue = computedValue
             }
 
             if (style) {
-                cell.style = style
+                cell.style = { ...cell.style, ...style }
             }
         }
     }

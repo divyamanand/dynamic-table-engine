@@ -1,1 +1,1 @@
-export { CellAddress, CellLayout, TablePosition, Region, Style, CellPayload, OverflowMode, FooterPlacement, PaginationSettings, HeaderVisibility, TableSettings } from "./common";
+export { CellAddress, CellLayout, TablePosition, Region, Style, CellStyle, Spacing, Alignment, VerticalAlignment, TableStyles, BodyStyles, ColumnStyleOverrides, CellPayload, OverflowMode, FooterPlacement, PaginationSettings, HeaderVisibility, TableSettings, Rect } from "./common";

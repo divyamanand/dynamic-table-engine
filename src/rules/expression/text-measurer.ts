@@ -17,7 +17,7 @@ export interface TextMetrics {
 }
 
 export interface FontStyle {
-  font?: string;
+  fontName?: string;
   fontSize: number; // pt or similar unit
 }
 
@@ -65,8 +65,13 @@ export class TextMeasurer {
     const fontSize = cell.style?.fontSize || 12;
     const metrics = this.measureText(text, { fontSize });
 
+    // Subtract padding from available dimensions
+    const padding = cell.style?.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    const availWidth = cell.layout.width - padding.left - padding.right;
+    const availHeight = cell.layout.height - padding.top - padding.bottom;
+
     // Check both width and height with small margin
-    return metrics.width > cell.layout.width * 0.98 || metrics.height > cell.layout.height * 0.98;
+    return metrics.width > availWidth * 0.98 || metrics.height > availHeight * 0.98;
   }
 
   /**

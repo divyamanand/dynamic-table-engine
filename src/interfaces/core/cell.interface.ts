@@ -1,11 +1,11 @@
-import { CellLayout, Region, Style } from "../../types/index";
+import { CellLayout, Region, CellStyle } from "../../types/index";
 
 export interface ICell {
     cellID: string;
     readonly layout?: CellLayout;
     inRegion: Region;
     rawValue: string | number;
-    style: Style;
+    style: CellStyle;
     isDynamic: boolean;
     computedValue?: string | number;
 

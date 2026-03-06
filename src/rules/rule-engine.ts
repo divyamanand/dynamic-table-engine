@@ -81,12 +81,8 @@ export class RuleEngine implements IRuleEngine {
       evalResult = this.evaluateCell(cell);
     }
 
-    // Merge base style with rule patches
-    const baseStyle = cell.style;
-    const mergedStyle: ResolvedCell['resolvedStyle'] = {
-      font: baseStyle.font,
-      fontSize: baseStyle.fontSize,
-    };
+    // Merge base style with rule patches (full CellStyle spread)
+    const mergedStyle = { ...cell.style };
 
     for (const patch of evalResult.stylePatches) {
       Object.assign(mergedStyle, patch.style);

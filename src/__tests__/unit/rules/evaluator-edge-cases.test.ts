@@ -3,13 +3,14 @@ import { Evaluator, EvaluationError } from '../../../rules/expression/evaluator'
 import type { EvalContext } from '../../../rules/types/evaluation.types';
 import type { ICell } from '../../../interfaces/core/cell.interface';
 import type { ExprNode } from '../../../rules/expression/ast.types';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 function mockCell(overrides: Partial<ICell> = {}): ICell {
   return {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: '',
-    style: { font: 'Arial', fontSize: 12 },
+    style: { ...defaultCellStyle },
     isDynamic: false,
     layout: {
       row: 0,
@@ -581,7 +582,7 @@ describe('Evaluator — Edge Cases', () => {
     it('condition: cell.overflows AND cell.fontSize > 6', () => {
       const cell = mockCell({
         rawValue: 'This is a very long text that will definitely overflow the cell bounds with a normal size',
-        style: { font: 'Arial', fontSize: 12 },
+        style: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 5, height: 5 },
       });
       const ctx = mockContext({}, { cell });
@@ -591,7 +592,7 @@ describe('Evaluator — Edge Cases', () => {
     it('condition: cell.overflows with non-overflowing cell', () => {
       const cell = mockCell({
         rawValue: 'Hi',
-        style: { font: 'Arial', fontSize: 12 },
+        style: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 100, height: 100 },
       });
       const ctx = mockContext({}, { cell });

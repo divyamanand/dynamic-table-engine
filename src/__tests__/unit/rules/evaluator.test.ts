@@ -3,6 +3,7 @@ import { Evaluator, EvaluationError } from '../../../rules/expression/evaluator'
 import type { EvalContext } from '../../../rules/types/evaluation.types';
 import type { ICell } from '../../../interfaces/core/cell.interface';
 import type { ExprNode } from '../../../rules/expression/ast.types';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 /**
  * Helper: create a mock cell
@@ -12,7 +13,7 @@ function mockCell(overrides: Partial<ICell> = {}): ICell {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: '',
-    style: { font: 'Arial', fontSize: 12 },
+    style: { ...defaultCellStyle },
     isDynamic: false,
     layout: {
       row: 0,
@@ -155,7 +156,7 @@ describe('Evaluator', () => {
     });
 
     it('resolves cell.fontSize', () => {
-      const ctx = mockContext({ style: { font: 'Arial', fontSize: 16 } });
+      const ctx = mockContext({ style: { ...defaultCellStyle, fontSize: 16 } });
       expect(evaluate('cell.fontSize', ctx)).toBe(16);
     });
 

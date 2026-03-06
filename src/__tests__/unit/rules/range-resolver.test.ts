@@ -1,13 +1,14 @@
 import { resolveRangeRef, RangeResolverError } from '../../../rules/expression/range-resolver';
 import type { EvalContext } from '../../../rules/types/evaluation.types';
 import type { ICell } from '../../../interfaces/core/cell.interface';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 function mockCell(id: string, rawValue: any = ''): ICell {
   return {
     cellID: id,
     inRegion: 'body',
     rawValue,
-    style: { font: 'Arial', fontSize: 12 },
+    style: { ...defaultCellStyle },
     isDynamic: false,
     layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 50, height: 20 },
   };

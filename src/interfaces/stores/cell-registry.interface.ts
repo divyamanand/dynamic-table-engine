@@ -1,4 +1,4 @@
-import {CellPayload, Region, Style } from "../../types";
+import {CellPayload, CellStyle, Region } from "../../types";
 import { ICell } from "../core";
 
 export interface ICellRegistry {
@@ -7,7 +7,7 @@ export interface ICellRegistry {
     // cellsByAddress: Map<string, ICell>
 
     //add new cell in a region, just create an random id and store the cell
-    createCell(region: Region, rawValue?: string, style?: Style, isDynamic?: boolean): string
+    createCell(region: Region, rawValue?: string, style?: Partial<CellStyle>, isDynamic?: boolean): string
     getCellById(cellId: string): ICell | undefined
     getCellByAddress(address: string): ICell | undefined
     updateCell(cellId: string, payload: CellPayload): void

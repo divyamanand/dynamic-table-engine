@@ -1,5 +1,6 @@
 import { TextMeasurer } from '../../../rules/expression/text-measurer';
 import type { ICell } from '../../../interfaces/core/cell.interface';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 describe('TextMeasurer', () => {
   // ============ measureText ============
@@ -73,7 +74,7 @@ describe('TextMeasurer', () => {
         cellID: 'test',
         inRegion: 'body',
         rawValue: text,
-        style: { font: 'Arial', fontSize },
+        style: { ...defaultCellStyle, fontSize },
         isDynamic: false,
         layout: {
           row: 0,
@@ -111,7 +112,7 @@ describe('TextMeasurer', () => {
         cellID: 'test',
         inRegion: 'body',
         rawValue: 'text',
-        style: { font: 'Arial', fontSize: 12 },
+        style: { ...defaultCellStyle },
         isDynamic: false,
       };
       expect(TextMeasurer.cellOverflows(cell)).toBe(false);

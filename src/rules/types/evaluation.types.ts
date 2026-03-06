@@ -5,6 +5,7 @@
 import type { ICell } from '../../interfaces/core/cell.interface';
 import type { IStructureStore } from '../../interfaces/stores/structure-store.interface';
 import type { ICellRegistry } from '../../interfaces/stores/cell-registry.interface';
+import type { CellStyle } from '../../types';
 import { ITable } from '../../interfaces';
 
 /**
@@ -54,20 +55,11 @@ export type RuleOutput =
 
 /**
  * StylePatch — partial style override (never stored on cell, merged at display time).
- * Examples: { color: 'red' }, { fontSize: 8 }, { backgroundColor: '#ffff00' }
+ * Uses Partial<CellStyle> for pdfme compatibility.
  */
 export interface StylePatch {
   type: 'style';
-  style: Partial<{
-    font: string;
-    fontSize: number;
-    color: string;
-    backgroundColor: string;
-    bold: boolean;
-    italic: boolean;
-    borderColor: string;
-    textAlign: 'left' | 'center' | 'right';
-  }>;
+  style: Partial<CellStyle>;
 }
 
 /**
@@ -189,17 +181,8 @@ export interface ResolvedCell {
     height: number; // mm
   };
 
-  /** Resolved style (base style + merged patches from rules) */
-  resolvedStyle: {
-    font: string;
-    fontSize: number;
-    color?: string;
-    backgroundColor?: string;
-    bold?: boolean;
-    italic?: boolean;
-    borderColor?: string;
-    textAlign?: 'left' | 'center' | 'right';
-  };
+  /** Resolved style (base cell style + merged patches from rules) */
+  resolvedStyle: CellStyle;
 
   /** Overflow handling mode */
   overflowMode?: 'clip' | 'wrap' | 'increase-height' | 'increase-width';

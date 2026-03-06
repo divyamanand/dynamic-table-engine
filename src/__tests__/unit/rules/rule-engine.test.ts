@@ -127,7 +127,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'region', region: 'body' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -237,7 +237,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'column', colIndex: 1 },
         condition: 'true',
-        result: '{ type: "style", style: { color: "blue" } }',
+        result: '{ type: "style", style: { fontColor: "blue" } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -261,7 +261,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'column', headerName: 'Col2' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "green" } }',
+        result: '{ type: "style", style: { fontColor: "green" } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -429,7 +429,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'cell', cellId: targetCellId },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -572,7 +572,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'region', region: 'body' },
         condition: 'cell.numericValue > 50',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -616,14 +616,14 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'table' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red", bold: true } }',
+        result: '{ type: "style", style: { fontColor: "red", bold: true } }',
       }));
 
       ruleEngine.evaluateAll();
       const body = structureStore.getBody();
       const res = ruleEngine.getResult(body[0][0])!;
       expect(res.stylePatches).toHaveLength(1);
-      expect(res.stylePatches[0]).toEqual({ type: 'style', style: { color: 'red', bold: true } });
+      expect(res.stylePatches[0]).toEqual({ type: 'style', style: { fontColor: 'red', bold: true } });
     });
 
     it('classifies ComputedValue output', () => {
@@ -779,22 +779,22 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'table' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "blue" } }',
+        result: '{ type: "style", style: { fontColor: "blue" } }',
         priority: 5,
       }));
 
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'table' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
         priority: 1,
       }));
 
       ruleEngine.evaluateAll();
       const res = ruleEngine.getResult(structureStore.getBody()[0][0])!;
       // Priority 1 first, then priority 5
-      expect(res.stylePatches[0].style).toEqual({ color: 'red' });
-      expect(res.stylePatches[1].style).toEqual({ color: 'blue' });
+      expect(res.stylePatches[0].style).toEqual({ fontColor: 'red' });
+      expect(res.stylePatches[1].style).toEqual({ fontColor: 'blue' });
     });
   });
 
@@ -837,7 +837,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'region', region: 'body' },
         condition: 'cell.numericValue > 50',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
       }));
 
       // Initially evaluate all — cell has value "10", condition false
@@ -850,7 +850,7 @@ describe('RuleEngine', () => {
 
       const res = ruleEngine.getResult(cellId)!;
       expect(res.stylePatches.length).toBe(1);
-      expect(res.stylePatches[0].style).toEqual({ color: 'red' });
+      expect(res.stylePatches[0].style).toEqual({ fontColor: 'red' });
     });
 
     it('auto-evaluates after removeBodyRow', () => {
@@ -960,7 +960,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'table' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red", bold: true } }',
+        result: '{ type: "style", style: { fontColor: "red", bold: true } }',
       }));
 
       ruleEngine.evaluateAll();
@@ -968,9 +968,9 @@ describe('RuleEngine', () => {
       const cell = cellRegistry.getCellById(cellId)!;
 
       const resolved = ruleEngine.resolveCell(cell);
-      expect(resolved.resolvedStyle.font).toBe('Arial');
-      expect(resolved.resolvedStyle.fontSize).toBe(10);
-      expect(resolved.resolvedStyle.color).toBe('red');
+      expect(resolved.resolvedStyle.fontName).toBeUndefined();
+      expect(resolved.resolvedStyle.fontSize).toBe(13);
+      expect(resolved.resolvedStyle.fontColor).toBe('red');
       expect(resolved.resolvedStyle.bold).toBe(true);
     });
 
@@ -1133,7 +1133,7 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'table' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "red" } }',
+        result: '{ type: "style", style: { fontColor: "red" } }',
         priority: 0,
       }));
 
@@ -1284,18 +1284,18 @@ describe('RuleEngine', () => {
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'region', region: 'body' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "body-color" } }',
+        result: '{ type: "style", style: { fontColor: "body-color" } }',
       }));
 
       ruleRegistry.addRule(makeRuleInput({
         target: { scope: 'region', region: 'theader' },
         condition: 'true',
-        result: '{ type: "style", style: { color: "header-color" } }',
+        result: '{ type: "style", style: { fontColor: "header-color" } }',
       }));
 
       ruleEngine.evaluateAll();
 
-      expect(ruleEngine.getResult(thId)?.stylePatches[0].style.color).toBe('header-color');
+      expect(ruleEngine.getResult(thId)?.stylePatches[0].style.fontColor).toBe('header-color');
       expect(ruleEngine.getResult(lhId)?.stylePatches.length).toBe(0);
       expect(ruleEngine.getResult(footId)?.stylePatches.length).toBe(0);
     });

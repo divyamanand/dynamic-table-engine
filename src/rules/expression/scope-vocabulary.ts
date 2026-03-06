@@ -124,6 +124,42 @@ export const SCOPE_VOCABULARY: Record<RuleScope, PaletteItem[]> = {
       returnType: 'number',
       description: 'Current font size',
     },
+    {
+      label: 'Font name',
+      exprTemplate: 'cell.fontName',
+      returnType: 'string',
+      description: 'Current font name',
+    },
+    {
+      label: 'Font color',
+      exprTemplate: 'cell.fontColor',
+      returnType: 'string',
+      description: 'Font color (hex)',
+    },
+    {
+      label: 'Background color',
+      exprTemplate: 'cell.backgroundColor',
+      returnType: 'string',
+      description: 'Background color (hex)',
+    },
+    {
+      label: 'Bold',
+      exprTemplate: 'cell.bold',
+      returnType: 'boolean',
+      description: 'Whether cell is bold',
+    },
+    {
+      label: 'Italic',
+      exprTemplate: 'cell.italic',
+      returnType: 'boolean',
+      description: 'Whether cell is italic',
+    },
+    {
+      label: 'Alignment',
+      exprTemplate: 'cell.alignment',
+      returnType: 'string',
+      description: 'Text alignment (left/center/right/justify)',
+    },
   ],
 
   /**

@@ -1,13 +1,14 @@
 import { FunctionRegistry, functionRegistry } from '../../../rules/expression/functions/registry';
 import type { EvalContext } from '../../../rules/types/evaluation.types';
 import type { ICell } from '../../../interfaces/core/cell.interface';
+import { defaultCellStyle } from '../../../stores/cell-registry.store';
 
 function mockCell(id: string, rawValue: any = ''): ICell {
   return {
     cellID: id,
     inRegion: 'body',
     rawValue,
-    style: { font: 'Arial', fontSize: 12 },
+    style: { ...defaultCellStyle },
     isDynamic: false,
   };
 }
