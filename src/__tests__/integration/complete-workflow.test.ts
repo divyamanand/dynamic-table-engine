@@ -304,7 +304,7 @@ describe('Complete Workflow Integration Test', () => {
 
       // Add rule that detects overflow and changes backgroundColor to red
       ruleRegistry.addRule({
-        target: { scope: 'cell' },
+        target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
         result: '{ backgroundColor: "#FF0000" }',
         priority: 0,
@@ -336,7 +336,7 @@ describe('Complete Workflow Integration Test', () => {
 
       // Add rule that detects overflow and decreases font size for wrapping
       ruleRegistry.addRule({
-        target: { scope: 'cell' },
+        target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
         result: '{ fontSize: 11 }',
         priority: 0,
@@ -365,7 +365,7 @@ describe('Complete Workflow Integration Test', () => {
 
       // Add rule that sets clip flag for overflow
       ruleRegistry.addRule({
-        target: { scope: 'cell' },
+        target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
         result: '{ clip: true }',
         priority: 0,
@@ -395,7 +395,7 @@ describe('Complete Workflow Integration Test', () => {
       // Add rule that detects multiline text (via cell.value containing newlines)
       // and increases height accordingly
       ruleRegistry.addRule({
-        target: { scope: 'cell' },
+        target: { scope: 'region', region: 'theader' },
         condition: 'cell.value && cell.value.length > 50',
         result: '{ comment: "Long text needs more height" }',
         priority: 0,
@@ -426,7 +426,7 @@ describe('Complete Workflow Integration Test', () => {
 
       // Add rule that detects long text and marks it for width expansion
       ruleRegistry.addRule({
-        target: { scope: 'cell' },
+        target: { scope: 'region', region: 'theader' },
         condition: 'cell.value && cell.value.length > 30',
         result: '{ comment: "Long header text needs wider column" }',
         priority: 0,
