@@ -2,7 +2,7 @@ import { CellLayout, Region, CellStyle } from "../types/index";
 import { ICell } from "../interfaces";
 
 export class Cell implements ICell {
-    public readonly cellID: string;
+    private readonly _cellID: string;
     public inRegion: Region;
     public rawValue: string | number;
     public style: CellStyle;
@@ -19,12 +19,16 @@ export class Cell implements ICell {
         style: CellStyle,
         computedValue?: string | number,
     ) {
-        this.cellID = cellID;
+        this._cellID = cellID;
         this.inRegion = inRegion;
         this.rawValue = rawValue;
         this.isDynamic = isDynamic;
         this.style = style;
         this.computedValue = computedValue;
+    }
+
+    public get cellID(): string {
+        return this._cellID;
     }
 
     public get layout(): CellLayout | undefined {

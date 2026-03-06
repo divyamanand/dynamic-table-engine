@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ls -la /e/Dev/campx/campx-dynamic-table-engine/src/interfaces/*.interface.ts)",
       "Bash(npm test -- --verbose)",
-      "Bash(ls -la *.interface.ts)"
+      "Bash(ls -la *.interface.ts)",
+      "Bash(npm test -- src/__tests__/unit/stores/cell-registry.test.ts)",
+      "Bash(npm test -- src/__tests__/unit/engines/layout-engine.test.ts)"
     ]
   }
 }

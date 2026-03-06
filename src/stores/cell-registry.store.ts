@@ -42,6 +42,8 @@ export class CellRegistry implements ICellRegistry {
         const key = this.toAddressKey(row, col)
         const cell = this.cellsById.get(cellId)
         if (cell) {
+            // Clear the old address if this cellId already has one
+            this.clearCellAddress(cellId)
             this.cellsByAddress.set(key, cell)
             this.cellIdToAddress.set(cellId, key)
         }
@@ -86,7 +88,7 @@ export class CellRegistry implements ICellRegistry {
                 cell.rawValue = rawValue
             }
 
-            if (computedValue !== undefined) {
+            if ('computedValue' in payload) {
                 cell.computedValue = computedValue
             }
 
