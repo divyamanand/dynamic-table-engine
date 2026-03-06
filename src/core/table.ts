@@ -263,6 +263,10 @@ export class Table implements ITable {
         this.rebuildAndEvaluate()
     }
 
+    getMerges(): Map<string, Rect> {
+        return this.mergeRegistry.getMergeSet()
+    }
+
     // --- Geometry ---
 
     setColumnWidth(colIndex: number, width: number): void {

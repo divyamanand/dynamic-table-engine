@@ -135,8 +135,16 @@ export class RenderableTable {
       alignment: settings.columnStyles?.alignment?.[idx],
     }))
 
-    // Step 4: Extract merges (if mergeRegistry is accessible)
-    const merges: RenderableMerge[] = [] // Will be populated if merge info is available
+    // Step 4: Extract merges
+    const mergeSet = table.getMerges()
+    const merges: RenderableMerge[] = Array.from(mergeSet.values()).map((rect) => ({
+      cellID: rect.cellId,
+      startRow: rect.startRow,
+      startCol: rect.startCol,
+      endRow: rect.endRow,
+      endCol: rect.endCol,
+      primaryRegion: rect.primaryRegion || 'body',
+    }))
 
     // Step 5: Calculate dimensions
     const getHeadHeight = (): number => {

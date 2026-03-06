@@ -24,6 +24,7 @@ export interface ITable {
     // Merge
     mergeCells(rect: Rect): void
     unmergeCells(cellId: string): void
+    getMerges(): Map<string, Rect>
 
     // Settings
     getSettings(): TableSettings
