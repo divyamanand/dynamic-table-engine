@@ -3,6 +3,8 @@ import { StructureStore } from '../../../stores/structure.store'
 import { CellRegistry } from '../../../stores/cell-registry.store'
 import { MergeRegistry } from '../../../stores/merge-registry.stores'
 import { LayoutEngine } from '../../../engines/layout.engine'
+import { RuleEngine } from '../../../rules/rule-engine'
+import { RuleRegistry } from '../../../rules/rule-registry'
 import { TableSettings } from '../../../types'
 import { Rect } from '../../../types/common'
 
@@ -12,13 +14,24 @@ describe('Table', () => {
     let cellRegistry: CellRegistry
     let mergeRegistry: MergeRegistry
     let layoutEngine: LayoutEngine
+    let ruleRegistry: RuleRegistry
+    let ruleEngine: RuleEngine
 
     beforeEach(() => {
         structureStore = new StructureStore()
         cellRegistry = new CellRegistry()
         mergeRegistry = new MergeRegistry(structureStore)
         layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry)
-        table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry)
+        ruleRegistry = new RuleRegistry()
+
+        // Create temporary table for rule engine initialization
+        table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any)
+
+        // Create rule engine
+        ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, table)
+
+        // Create final table with rule engine
+        table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine)
     })
 
     describe('initialization', () => {
@@ -38,7 +51,7 @@ describe('Table', () => {
                 maxRows: 20,
             }
 
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
             const settings = table.getSettings()
 
             expect(settings.overflow).toBe('increase-width')
@@ -51,7 +64,7 @@ describe('Table', () => {
                 minCols: 5,
             }
 
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
             const settings = table.getSettings()
 
             expect(settings.minCols).toBe(5)
@@ -225,7 +238,7 @@ describe('Table', () => {
 
         it('should pad body to minRows', () => {
             const customSettings: Partial<TableSettings> = { minRows: 5 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             table.buildBody([['a', 'b']])
 
@@ -283,7 +296,7 @@ describe('Table', () => {
 
         it('should respect maxRows setting', () => {
             const customSettings: Partial<TableSettings> = { maxRows: 2 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             table.insertBodyRow(0)
             table.insertBodyRow(1)
@@ -341,7 +354,7 @@ describe('Table', () => {
 
         it('should respect minRows setting', () => {
             const customSettings: Partial<TableSettings> = { minRows: 3 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             // Add 1 header leaf to create body columns
             table.addHeaderCell('theader')
@@ -357,7 +370,7 @@ describe('Table', () => {
 
         it('should clear cell values when minRows prevents deletion', () => {
             const customSettings: Partial<TableSettings> = { minRows: 1 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             // Add 1 header leaf to match the data
             table.addHeaderCell('theader')
@@ -400,7 +413,7 @@ describe('Table', () => {
 
         it('should respect maxCols setting', () => {
             const customSettings: Partial<TableSettings> = { maxCols: 2 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             // Add 2 header leaves
             table.addHeaderCell('theader')
@@ -445,7 +458,7 @@ describe('Table', () => {
 
         it('should respect minCols setting', () => {
             const customSettings: Partial<TableSettings> = { minCols: 3 }
-            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, customSettings)
+            table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine, customSettings)
 
             // Add 3 header leaves
             table.addHeaderCell('theader')
