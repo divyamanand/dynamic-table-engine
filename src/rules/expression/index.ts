@@ -54,6 +54,9 @@ export { TextMeasurer } from './text-measurer';
 // Range Resolver
 export { resolveRangeRef } from './range-resolver';
 
+// Dependency Extraction
+export { extractVarPaths } from './extract-deps';
+
 // Scope Vocabulary (for canvas UI)
 export { SCOPE_VOCABULARY } from './scope-vocabulary';
 export type { PaletteItem, RuleScope } from './scope-vocabulary';

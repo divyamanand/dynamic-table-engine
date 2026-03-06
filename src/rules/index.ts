@@ -23,6 +23,13 @@ export type {
   RuleEvaluationStats,
 } from './types/evaluation.types';
 
+// Rule Registry
+export { RuleRegistry, ruleRegistry } from './rule-registry';
+export type { IRuleRegistry, MatchContext } from '../interfaces/rules';
+
+// Rule Matcher
+export { matchesCell } from './rule-matcher';
+
 // Scope vocabulary (for canvas UI)
 export { SCOPE_VOCABULARY } from './expression/scope-vocabulary';
 export type { RuleScope } from './expression/scope-vocabulary';
