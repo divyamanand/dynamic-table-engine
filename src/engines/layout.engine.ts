@@ -71,8 +71,8 @@ export class LayoutEngine implements ILayoutEngine {
 
         const row = orientation === "horizontal" ? secondaryStart : primaryStart
         const col = orientation === "horizontal" ? primaryStart : secondaryStart
-        const rowSpan = secondarySpan
-        const colSpan = primarySpan
+        const rowSpan = orientation === "horizontal" ? secondarySpan : primarySpan
+        const colSpan = orientation === "horizontal" ? primarySpan : secondarySpan
 
         cell._setLayout({ row, col, rowSpan, colSpan, x: 0, y: 0, width: 0, height: 0 })
         this.cellRegistry.setCellAddress(cellId, row, col)

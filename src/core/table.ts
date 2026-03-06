@@ -48,11 +48,47 @@ export class Table implements ITable {
     private rebuildAndEvaluate(): void {
         this.layoutEngine.rebuild()
         this.ruleEngine?.evaluateAll()
+        this.applyRuleResults()
     }
 
     private rebuildGeometryAndEvaluate(): void {
         this.layoutEngine.rebuildGeometry()
         this.ruleEngine?.evaluateAll()
+        this.applyRuleResults()
+    }
+
+    private applyRuleResults(): void {
+        if (!this.ruleEngine) return
+
+        let geometryChanged = false
+        for (const [cellId, result] of this.ruleEngine.getAllResults()) {
+            // Apply computedValue back to cell
+            if (result.computedValue !== undefined) {
+                this.cellRegistry.updateCell(cellId, { computedValue: result.computedValue })
+            }
+
+            // Apply deltaInstructions to layout engine
+            for (const delta of result.deltaInstructions) {
+                if (delta.type === 'row-height-min') {
+                    const currentHeights = this.layoutEngine.getRowHeights()
+                    if (delta.rowIndex < currentHeights.length && currentHeights[delta.rowIndex] < delta.minHeight) {
+                        this.layoutEngine.setRowHeight(delta.rowIndex, delta.minHeight)
+                        geometryChanged = true
+                    }
+                } else if (delta.type === 'col-width-min') {
+                    const currentWidths = this.layoutEngine.getColumnWidths()
+                    if (delta.colIndex < currentWidths.length && currentWidths[delta.colIndex] < delta.minWidth) {
+                        this.layoutEngine.setColumnWidth(delta.colIndex, delta.minWidth)
+                        geometryChanged = true
+                    }
+                }
+            }
+        }
+
+        // Re-apply geometry if any dimensions changed
+        if (geometryChanged) {
+            this.layoutEngine.rebuildGeometry()
+        }
     }
 
     // --- Settings ---
@@ -209,6 +245,7 @@ export class Table implements ITable {
         if (this.ruleEngine) {
             const cell = this.cellRegistry.getCellById(cellId)
             if (cell) this.ruleEngine.evaluateCell(cell)
+            this.applyRuleResults()
         }
     }
 

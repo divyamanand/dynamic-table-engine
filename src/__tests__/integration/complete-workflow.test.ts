@@ -306,7 +306,7 @@ describe('Complete Workflow Integration Test', () => {
       ruleRegistry.addRule({
         target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
-        result: '{ backgroundColor: "#FF0000" }',
+        result: '{ type: "style", style: { backgroundColor: "#FF0000" } }',
         priority: 0,
         enabled: true,
         label: 'Highlight overflow cells'
@@ -338,7 +338,7 @@ describe('Complete Workflow Integration Test', () => {
       ruleRegistry.addRule({
         target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
-        result: '{ fontSize: 11 }',
+        result: '{ type: "style", style: { fontSize: 11 } }',
         priority: 0,
         enabled: true,
         label: 'Reduce font size on overflow'
@@ -367,7 +367,7 @@ describe('Complete Workflow Integration Test', () => {
       ruleRegistry.addRule({
         target: { scope: 'region', region: 'theader' },
         condition: 'cell.overflows',
-        result: '{ clip: true }',
+        result: '{ type: "renderFlag", clip: true }',
         priority: 0,
         enabled: true,
         label: 'Clip overflowing text'
@@ -388,65 +388,105 @@ describe('Complete Workflow Integration Test', () => {
       expect(resolvedCell.renderFlags.clip).toBe(true);
     });
 
-    it('should handle INCREASE-HEIGHT mode - rule-driven height expansion', () => {
+    it('should handle CLIP mode - set computedValue to clipped text', () => {
+      const cellId = table.addHeaderCell('theader');
+
+      ruleRegistry.addRule({
+        target: { scope: 'region', region: 'theader' },
+        condition: 'cell.overflows',
+        result: '{ type: "computedValue", value: "Long text tha..." }',
+        priority: 0,
+        enabled: true,
+        label: 'Clip text to fit'
+      });
+
+      const text = 'Long text that gets clipped in rendering';
+      table.updateCell(cellId, { rawValue: text });
+      table.setColumnWidth(0, 15);
+
+      const cell = cellRegistry.getCellById(cellId);
+
+      // Rule engine auto-applies computedValue back to the cell (complete workflow)
+      expect(cell?.computedValue).toBe('Long text tha...');
+
+      // displayValue in resolved cell should also be the clipped text
+      const resolvedCell = ruleEngine.resolveCell(cell!);
+      expect(resolvedCell.displayValue).toBe('Long text tha...');
+    });
+
+    it('should handle INCREASE-HEIGHT mode via deltaInstruction (auto-applied)', () => {
       const cellId1 = table.addHeaderCell('theader');
       const cellId2 = table.addHeaderCell('theader');
 
-      // Add rule that detects multiline text (via cell.value containing newlines)
-      // and increases height accordingly
+      // Rule emits a row-height-min delta instruction when text overflows
       ruleRegistry.addRule({
         target: { scope: 'region', region: 'theader' },
-        condition: 'cell.value && cell.value.length > 50',
-        result: '{ comment: "Long text needs more height" }',
+        condition: 'cell.overflows',
+        result: '{ type: "row-height-min", rowIndex: 0, minHeight: 30 }',
         priority: 0,
         enabled: true,
-        label: 'Flag cells needing height adjustment'
+        label: 'Auto-expand row height for overflow'
       });
 
       const longText = 'Line1\nLine2\nLine3\nThis text spans multiple lines and needs more space';
       table.updateCell(cellId1, { rawValue: longText });
 
-      // Initial geometry
-      const initialHeight = cellRegistry.getCellById(cellId1)?.layout?.height;
-
-      // Manually increase height (would be triggered by rule in real scenario)
-      table.setRowHeight(0, (initialHeight || 10) + 20);
-
-      // Both cells in row should grow
+      // Delta instruction should have been auto-applied by applyDeltaInstructions()
+      // No manual setRowHeight needed — the table facade handles it
       const cell1 = cellRegistry.getCellById(cellId1);
       const cell2 = cellRegistry.getCellById(cellId2);
-
-      expect(cell1?.layout?.height).toBe((initialHeight || 10) + 20);
-      expect(cell2?.layout?.height).toBe((initialHeight || 10) + 20);
+      expect(cell1?.layout?.height).toBe(30);
+      expect(cell2?.layout?.height).toBe(30);
     });
 
-    it('should handle INCREASE-WIDTH mode - rule-driven width expansion', () => {
+    it('should handle INCREASE-WIDTH mode via deltaInstruction (auto-applied)', () => {
       const rootId = table.addHeaderCell('theader');
       const childId = table.addHeaderCell('theader', rootId);
 
-      // Add rule that detects long text and marks it for width expansion
+      // Rule emits a col-width-min delta instruction when text overflows
       ruleRegistry.addRule({
         target: { scope: 'region', region: 'theader' },
-        condition: 'cell.value && cell.value.length > 30',
-        result: '{ comment: "Long header text needs wider column" }',
+        condition: 'cell.overflows',
+        result: '{ type: "col-width-min", colIndex: 0, minWidth: 60 }',
         priority: 0,
         enabled: true,
-        label: 'Flag cells needing width adjustment'
+        label: 'Auto-expand column width for overflow'
       });
 
       const longText = 'VeryLongHeaderTextThatExceedsDefaultWidth';
       table.updateCell(rootId, { rawValue: longText });
 
-      // Initial width
-      const initialWidth = cellRegistry.getCellById(rootId)?.layout?.width;
-
-      // Manually increase width (would be triggered by rule in real scenario)
-      table.setColumnWidth(0, (initialWidth || 30) + 30);
-
-      // All cells in column should grow
+      // Delta instruction should have been auto-applied — no manual setColumnWidth
       const root = cellRegistry.getCellById(rootId);
       const child = cellRegistry.getCellById(childId);
+      expect(root?.layout?.width).toBe(60);
+      expect(child?.layout?.width).toBe(60);
+    });
 
+    // ---- Manual geometry tests (no rule engine, verifying propagation) ----
+
+    it('should propagate manual height increase to all cells in row', () => {
+      const cellId1 = table.addHeaderCell('theader');
+      const cellId2 = table.addHeaderCell('theader');
+
+      const initialHeight = cellRegistry.getCellById(cellId1)?.layout?.height;
+      table.setRowHeight(0, (initialHeight || 10) + 20);
+
+      const cell1 = cellRegistry.getCellById(cellId1);
+      const cell2 = cellRegistry.getCellById(cellId2);
+      expect(cell1?.layout?.height).toBe((initialHeight || 10) + 20);
+      expect(cell2?.layout?.height).toBe((initialHeight || 10) + 20);
+    });
+
+    it('should propagate manual width increase to all cells in column', () => {
+      const rootId = table.addHeaderCell('theader');
+      const childId = table.addHeaderCell('theader', rootId);
+
+      const initialWidth = cellRegistry.getCellById(rootId)?.layout?.width;
+      table.setColumnWidth(0, (initialWidth || 30) + 30);
+
+      const root = cellRegistry.getCellById(rootId);
+      const child = cellRegistry.getCellById(childId);
       expect(root?.layout?.width).toBe((initialWidth || 30) + 30);
       expect(child?.layout?.width).toBe((initialWidth || 30) + 30);
     });
