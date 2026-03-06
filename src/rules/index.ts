@@ -27,6 +27,10 @@ export type {
 export { RuleRegistry, ruleRegistry } from './rule-registry';
 export type { IRuleRegistry, MatchContext } from '../interfaces/rules';
 
+// Rule Engine
+export { RuleEngine } from './rule-engine';
+export type { IRuleEngine } from '../interfaces/rules';
+
 // Rule Matcher
 export { matchesCell } from './rule-matcher';
 

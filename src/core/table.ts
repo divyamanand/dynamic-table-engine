@@ -1,5 +1,7 @@
 import { ICellRegistry, ILayoutEngine, IMergeRegistry, IStructureStore, ITable } from "../interfaces"
 import { ICell } from "../interfaces/core"
+import { IRuleEngine } from "../interfaces/rules/rule-engine.interface"
+import { EvaluationResult } from "../rules/types/evaluation.types"
 import { CellPayload, Region, TableSettings } from "../types"
 import { Rect } from "../types/common"
 
@@ -17,6 +19,7 @@ export class Table implements ITable {
     private layoutEngine: ILayoutEngine
     private mergeRegistry: IMergeRegistry
     private settings: TableSettings
+    private ruleEngine?: IRuleEngine
 
     constructor(
         structureStore: IStructureStore,
@@ -32,6 +35,26 @@ export class Table implements ITable {
         this.settings = { ...DEFAULT_TABLE_SETTINGS, ...settings }
     }
 
+    // --- Rule engine ---
+
+    setRuleEngine(engine: IRuleEngine): void {
+        this.ruleEngine = engine
+    }
+
+    getEvaluationResult(cellId: string): EvaluationResult | undefined {
+        return this.ruleEngine?.getResult(cellId)
+    }
+
+    private rebuildAndEvaluate(): void {
+        this.layoutEngine.rebuild()
+        this.ruleEngine?.evaluateAll()
+    }
+
+    private rebuildGeometryAndEvaluate(): void {
+        this.layoutEngine.rebuildGeometry()
+        this.ruleEngine?.evaluateAll()
+    }
+
     // --- Settings ---
 
     getSettings(): TableSettings {
@@ -40,7 +63,7 @@ export class Table implements ITable {
 
     updateSettings(patch: Partial<TableSettings>): void {
         this.settings = { ...this.settings, ...patch }
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     // --- Header operations ---
@@ -61,7 +84,7 @@ export class Table implements ITable {
             this.insertBodySliceForRegion(region, leafIndex)
         }
 
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
         return cellId
     }
 
@@ -80,7 +103,7 @@ export class Table implements ITable {
         }
 
         this.cellRegistry.deleteCell(cellId)
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     // --- Body slice helpers ---
@@ -126,7 +149,7 @@ export class Table implements ITable {
         }
         this.structureStore.insertBodyRow(rowIndex, cellIds)
         this.layoutEngine.insertRowHeight(rowIndex, this.layoutEngine.getDefaultCellHeight())
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     removeBodyRow(rowIndex: number): void {
@@ -144,7 +167,7 @@ export class Table implements ITable {
         const removedIds = this.structureStore.removeBodyRow(rowIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
         this.layoutEngine.removeRowHeight(rowIndex)
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     insertBodyCol(colIndex: number, data?: (string | number)[]): void {
@@ -158,7 +181,7 @@ export class Table implements ITable {
         }
         this.structureStore.insertBodyCol(colIndex, cellIds)
         this.layoutEngine.insertColumnWidth(colIndex, this.layoutEngine.getDefaultCellWidth())
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     removeBodyCol(colIndex: number): void {
@@ -168,7 +191,7 @@ export class Table implements ITable {
         const removedIds = this.structureStore.removeBodyCol(colIndex)
         for (const id of removedIds) this.cellRegistry.deleteCell(id)
         this.layoutEngine.removeColumnWidth(colIndex)
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     // --- Cell access ---
@@ -183,30 +206,34 @@ export class Table implements ITable {
 
     updateCell(cellId: string, payload: CellPayload): void {
         this.cellRegistry.updateCell(cellId, payload)
+        if (this.ruleEngine) {
+            const cell = this.cellRegistry.getCellById(cellId)
+            if (cell) this.ruleEngine.evaluateCell(cell)
+        }
     }
 
     // --- Merge ---
 
     mergeCells(rect: Rect): void {
         this.mergeRegistry.createMerge(rect)
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     unmergeCells(cellId: string): void {
         this.mergeRegistry.deleteMerge(cellId)
-        this.layoutEngine.rebuild()
+        this.rebuildAndEvaluate()
     }
 
     // --- Geometry ---
 
     setColumnWidth(colIndex: number, width: number): void {
         this.layoutEngine.setColumnWidth(colIndex, width)
-        this.layoutEngine.rebuildGeometry()
+        this.rebuildGeometryAndEvaluate()
     }
 
     setRowHeight(rowIndex: number, height: number): void {
         this.layoutEngine.setRowHeight(rowIndex, height)
-        this.layoutEngine.rebuildGeometry()
+        this.rebuildGeometryAndEvaluate()
     }
 
     setDefaultCellWidth(width: number): void {

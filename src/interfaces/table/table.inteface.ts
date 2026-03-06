@@ -1,6 +1,8 @@
 import { ICell } from "../core"
 import { CellPayload, Region, TableSettings, TablePosition } from "../../types"
 import { Rect } from "../../types/common"
+import type { IRuleEngine } from "../rules/rule-engine.interface"
+import type { EvaluationResult } from "../../rules/types/evaluation.types"
 
 export interface ITable {
     // Header operations
@@ -39,4 +41,8 @@ export interface ITable {
 
     // Layout
     getCompleteGrid(): string[][]
+
+    // Rule engine
+    setRuleEngine(engine: IRuleEngine): void
+    getEvaluationResult(cellId: string): EvaluationResult | undefined
 }
