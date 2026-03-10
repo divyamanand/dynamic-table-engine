@@ -30,9 +30,6 @@ describe('Header Merge and Unmerge', () => {
     layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry)
     ruleRegistry = new RuleRegistry()
 
-    // Create temporary table for rule engine initialization
-    table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any)
-
     // Create rule engine
     ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, table)
 
