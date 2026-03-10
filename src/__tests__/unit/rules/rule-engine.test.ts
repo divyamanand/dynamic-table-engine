@@ -24,10 +24,12 @@ function createTestSetup() {
   const cellRegistry = new CellRegistry();
   const mergeRegistry = new MergeRegistry(structureStore);
   const layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry);
-  const table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry);
   const ruleRegistry = new RuleRegistry();
-  const ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, table);
-  table.setRuleEngine(ruleEngine);
+  // Create temporary table for rule engine init
+  const tempTable = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any);
+  const ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, tempTable);
+  // Create final table with rule engine
+  const table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine);
 
   return { structureStore, cellRegistry, mergeRegistry, layoutEngine, table, ruleRegistry, ruleEngine };
 }
@@ -1160,14 +1162,16 @@ describe('RuleEngine', () => {
       expect(res.firedRuleIds).toHaveLength(3);
     });
 
-    it('getEvaluationResult on Table returns undefined when no ruleEngine', () => {
+    it('getEvaluationResult on Table returns undefined when no rules registered', () => {
       const structureStore = new StructureStore();
       const cellRegistry = new CellRegistry();
       const mergeRegistry = new MergeRegistry(structureStore);
       const layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry);
-      const table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry);
+      const tempTable = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any);
+      const ruleEngine = new RuleEngine(new RuleRegistry(), cellRegistry, structureStore, tempTable);
+      const table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine);
 
-      // No rule engine set
+      // No rules registered
       expect(table.getEvaluationResult('any-id')).toBeUndefined();
     });
 

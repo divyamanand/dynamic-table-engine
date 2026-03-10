@@ -78,49 +78,49 @@ export const VAR_CATALOG: Record<string, VarDef> = {
     path: 'cell.fontSize',
     description: 'Current font size',
     returnType: 'number',
-    resolve: (ctx) => ctx.cell?.style.fontSize ?? 13,
+    resolve: (ctx) => ctx.cell?.styleOverrides.fontSize ?? 13,
   },
 
   'cell.fontName': {
     path: 'cell.fontName',
     description: 'Current font name',
     returnType: 'string',
-    resolve: (ctx) => ctx.cell?.style.fontName ?? '',
+    resolve: (ctx) => ctx.cell?.styleOverrides.fontName ?? '',
   },
 
   'cell.fontColor': {
     path: 'cell.fontColor',
     description: 'Current font color (hex)',
     returnType: 'string',
-    resolve: (ctx) => ctx.cell?.style.fontColor ?? '#000000',
+    resolve: (ctx) => ctx.cell?.styleOverrides.fontColor ?? '#000000',
   },
 
   'cell.backgroundColor': {
     path: 'cell.backgroundColor',
     description: 'Current background color (hex)',
     returnType: 'string',
-    resolve: (ctx) => ctx.cell?.style.backgroundColor ?? '',
+    resolve: (ctx) => ctx.cell?.styleOverrides.backgroundColor ?? '',
   },
 
   'cell.bold': {
     path: 'cell.bold',
     description: 'Whether cell is bold',
     returnType: 'boolean',
-    resolve: (ctx) => ctx.cell?.style.bold ?? false,
+    resolve: (ctx) => ctx.cell?.styleOverrides.bold ?? false,
   },
 
   'cell.italic': {
     path: 'cell.italic',
     description: 'Whether cell is italic',
     returnType: 'boolean',
-    resolve: (ctx) => ctx.cell?.style.italic ?? false,
+    resolve: (ctx) => ctx.cell?.styleOverrides.italic ?? false,
   },
 
   'cell.alignment': {
     path: 'cell.alignment',
     description: 'Text alignment (left/center/right/justify)',
     returnType: 'string',
-    resolve: (ctx) => ctx.cell?.style.alignment ?? 'left',
+    resolve: (ctx) => ctx.cell?.styleOverrides.alignment ?? 'left',
   },
 
   'cell.overflows': {

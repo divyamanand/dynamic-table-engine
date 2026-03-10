@@ -39,7 +39,10 @@ export async function uiRender(
   container.style.height = `${renderableTable.getHeight()}mm`
   container.style.position = 'relative'
   container.style.overflow = 'auto'
-  container.style.border = `${renderableTable.tableStyles.borderWidth || 0.1}mm solid ${renderableTable.tableStyles.borderColor || '#000'}`
+  const ts = renderableTable.tableStyle
+  const tsBorderTop = ts.borderWidth?.top ?? 0.1
+  const tsBorderColor = ts.borderColor ?? '#000'
+  container.style.border = `${tsBorderTop}mm solid ${tsBorderColor}`
   container.style.fontFamily = 'Arial, sans-serif'
   container.style.fontSize = '12px'
 
@@ -193,7 +196,7 @@ function renderCell(
   cellDiv.style.wordWrap = 'break-word'
 
   // Apply styles
-  applyCellStyles(cellDiv, cell.style, column)
+  applyCellStyles(cellDiv, cell.style)
 
   // Set content (computed value if dynamic, otherwise raw value)
   const value = cell.isDynamic ? (cell.computedValue || cell.rawValue) : cell.rawValue
@@ -262,8 +265,7 @@ function renderCell(
  */
 function applyCellStyles(
   element: HTMLElement,
-  style: CellStyle,
-  column: RenderableColumn
+  style: CellStyle
 ): void {
   // Font properties
   element.style.fontFamily = style.fontName || 'Arial'
@@ -276,12 +278,12 @@ function applyCellStyles(
   element.style.backgroundColor = style.backgroundColor || 'transparent'
 
   // Text alignment
-  element.style.textAlign = (style.alignment || column.alignment || 'left') as any
+  element.style.textAlign = (style.alignment || 'left') as any
 
   // Vertical alignment (using flexbox)
   element.style.display = 'flex'
   element.style.alignItems = getVerticalAlignValue(style.verticalAlignment)
-  element.style.justifyContent = getHorizontalAlignValue(style.alignment || column.alignment)
+  element.style.justifyContent = getHorizontalAlignValue(style.alignment)
 
   // Borders
   if (style.borderWidth) {

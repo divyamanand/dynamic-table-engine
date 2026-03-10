@@ -74,7 +74,7 @@ describe('TextMeasurer', () => {
         cellID: 'test',
         inRegion: 'body',
         rawValue: text,
-        style: { ...defaultCellStyle, fontSize },
+        styleOverrides: { ...defaultCellStyle, fontSize },
         isDynamic: false,
         layout: {
           row: 0,
@@ -112,7 +112,7 @@ describe('TextMeasurer', () => {
         cellID: 'test',
         inRegion: 'body',
         rawValue: 'text',
-        style: { ...defaultCellStyle },
+        styleOverrides: { ...defaultCellStyle },
         isDynamic: false,
       };
       expect(TextMeasurer.cellOverflows(cell)).toBe(false);

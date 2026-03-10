@@ -13,7 +13,7 @@ function mockCell(overrides: Partial<ICell> = {}): ICell {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: '',
-    style: { ...defaultCellStyle },
+    styleOverrides: { ...defaultCellStyle },
     isDynamic: false,
     layout: {
       row: 0,
@@ -60,6 +60,7 @@ function mockContext(cellOverrides: Partial<ICell> = {}, ctxOverrides: Partial<E
       getCellById: (id: string) => cells[id] ?? undefined,
       getCellByAddress: () => undefined,
       createCell: () => '',
+      createCellWithId: () => '',
       updateCell: () => {},
       deleteCell: () => {},
       setCellAddress: () => {},
@@ -156,7 +157,7 @@ describe('Evaluator', () => {
     });
 
     it('resolves cell.fontSize', () => {
-      const ctx = mockContext({ style: { ...defaultCellStyle, fontSize: 16 } });
+      const ctx = mockContext({ styleOverrides: { ...defaultCellStyle, fontSize: 16 } });
       expect(evaluate('cell.fontSize', ctx)).toBe(16);
     });
 

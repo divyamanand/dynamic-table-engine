@@ -73,3 +73,9 @@ export function createTableRendererPlugin(): TableRendererPlugin {
  * Export default plugin instance
  */
 export const tableRendererPlugin = createTableRendererPlugin()
+
+/**
+ * pdfme plugin for dynamic tables
+ */
+export { dynamicTablePlugin, SCHEMA_TYPE } from './pdfme'
+export type { DynamicTableSchema } from './pdfme'

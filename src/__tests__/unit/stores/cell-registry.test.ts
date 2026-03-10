@@ -44,11 +44,11 @@ describe('CellRegistry', () => {
             const cellId = registry.createCell('body', 'Test', customStyle)
 
             const cell = registry.getCellById(cellId)
-            expect(cell!.style.bold).toBe(true)
-            expect(cell!.style.fontSize).toBe(16)
-            expect(cell!.style.alignment).toBe('center')
-            // Should merge with defaults
-            expect(cell!.style.italic).toBe(false)
+            expect(cell!.styleOverrides.bold).toBe(true)
+            expect(cell!.styleOverrides.fontSize).toBe(16)
+            expect(cell!.styleOverrides.alignment).toBe('center')
+            // Only stores overrides — properties not set remain undefined
+            expect(cell!.styleOverrides.italic).toBeUndefined()
         })
 
         it('should create a cell with isDynamic flag', () => {
@@ -78,14 +78,15 @@ describe('CellRegistry', () => {
             }
         })
 
-        it('should merge custom style with defaults', () => {
+        it('should store only provided overrides (no default merge)', () => {
             const customStyle: Partial<CellStyle> = { fontSize: 20 }
             const cellId = registry.createCell('body', 'Test', customStyle)
 
             const cell = registry.getCellById(cellId)
-            expect(cell!.style.fontSize).toBe(20)
-            expect(cell!.style.alignment).toBe('left') // from defaults
-            expect(cell!.style.bold).toBe(false) // from defaults
+            expect(cell!.styleOverrides.fontSize).toBe(20)
+            // Only stores what was explicitly provided
+            expect(cell!.styleOverrides.alignment).toBeUndefined()
+            expect(cell!.styleOverrides.bold).toBeUndefined()
         })
 
         it('should handle empty string rawValue', () => {
@@ -158,9 +159,9 @@ describe('CellRegistry', () => {
             registry.updateCell(cellId, { style: { bold: true, fontSize: 16 } })
 
             const cell = registry.getCellById(cellId)
-            expect(cell!.style.bold).toBe(true)
-            expect(cell!.style.fontSize).toBe(16)
-            expect(cell!.style.alignment).toBe('left') // preserved from default
+            expect(cell!.styleOverrides.bold).toBe(true)
+            expect(cell!.styleOverrides.fontSize).toBe(16)
+            expect(cell!.styleOverrides.alignment).toBeUndefined() // not set, no default merge
         })
 
         it('should update multiple properties together', () => {
@@ -176,7 +177,7 @@ describe('CellRegistry', () => {
             expect(cell!.rawValue).toBe('Updated')
             expect(cell!.computedValue).toBe('result')
             expect(cell!.inRegion).toBe('theader')
-            expect(cell!.style.bold).toBe(true)
+            expect(cell!.styleOverrides.bold).toBe(true)
         })
 
         it('should not affect other cells when updating one', () => {
@@ -428,28 +429,29 @@ describe('CellRegistry', () => {
             registry.updateCell(cellId, { style: { fontSize: 16 } })
 
             const cell = registry.getCellById(cellId)
-            expect(cell!.style.fontSize).toBe(16)
-            expect(cell!.style.bold).toBe(true)
+            expect(cell!.styleOverrides.fontSize).toBe(16)
+            expect(cell!.styleOverrides.bold).toBe(true)
         })
     })
 
     describe('default style', () => {
-        it('should use defaultCellStyle when no style provided', () => {
+        it('should have empty styleOverrides when no style provided', () => {
             const cellId = registry.createCell('body')
             const cell = registry.getCellById(cellId)
 
-            expect(cell!.style.alignment).toBe(defaultCellStyle.alignment)
-            expect(cell!.style.fontSize).toBe(defaultCellStyle.fontSize)
-            expect(cell!.style.bold).toBe(defaultCellStyle.bold)
+            // Cells store only overrides — no defaults merged
+            expect(cell!.styleOverrides.alignment).toBeUndefined()
+            expect(cell!.styleOverrides.fontSize).toBeUndefined()
+            expect(cell!.styleOverrides.bold).toBeUndefined()
         })
 
-        it('should override specific default style properties', () => {
+        it('should store only provided style properties', () => {
             const customStyle: Partial<CellStyle> = { fontSize: 20 }
             const cellId = registry.createCell('body', 'test', customStyle)
             const cell = registry.getCellById(cellId)
 
-            expect(cell!.style.fontSize).toBe(20)
-            expect(cell!.style.alignment).toBe(defaultCellStyle.alignment)
+            expect(cell!.styleOverrides.fontSize).toBe(20)
+            expect(cell!.styleOverrides.alignment).toBeUndefined()
         })
     })
 })

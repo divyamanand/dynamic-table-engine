@@ -12,7 +12,8 @@ import type { IStructureStore } from '../interfaces/stores/structure-store.inter
 import type { ITable } from '../interfaces/table/table.inteface';
 import type { ICell } from '../interfaces/core';
 import type { MatchContext } from './rule-matcher';
-import type { Rule } from './types/rule.types';
+import type { Rule, RulePayload } from './types/rule.types';
+import { resolveStyle } from '../styles/resolve';
 import type {
   EvalContext,
   EvaluationResult,
@@ -81,12 +82,10 @@ export class RuleEngine implements IRuleEngine {
       evalResult = this.evaluateCell(cell);
     }
 
-    // Merge base style with rule patches (full CellStyle spread)
-    const mergedStyle = { ...cell.style };
-
-    for (const patch of evalResult.stylePatches) {
-      Object.assign(mergedStyle, patch.style);
-    }
+    // Resolve style through cascade: default → region → cell → rule patches
+    const regionStyle = this.table.getRegionStyle(cell.inRegion);
+    const rulePatches = evalResult.stylePatches.map(p => p.style);
+    const mergedStyle = resolveStyle(regionStyle, cell.styleOverrides, ...rulePatches);
 
     // Merge render flags
     const renderFlags: ResolvedCell['renderFlags'] = {};
@@ -115,6 +114,14 @@ export class RuleEngine implements IRuleEngine {
 
   clearResults(): void {
     this.results.clear();
+  }
+
+  exportRules(): RulePayload[] {
+    return this.ruleRegistry.export();
+  }
+
+  importRules(payloads: RulePayload[]): void {
+    this.ruleRegistry.import(payloads);
   }
 
   // --- internal ---

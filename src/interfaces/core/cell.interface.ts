@@ -5,7 +5,8 @@ export interface ICell {
     readonly layout?: CellLayout;
     inRegion: Region;
     rawValue: string | number;
-    style: CellStyle;
+    /** Per-cell style overrides (partial). Resolved to full CellStyle at render time via cascade. */
+    styleOverrides: Partial<CellStyle>;
     isDynamic: boolean;
     computedValue?: string | number;
 

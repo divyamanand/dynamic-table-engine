@@ -10,7 +10,7 @@ function mockCell(overrides: Partial<ICell> = {}): ICell {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: '',
-    style: { ...defaultCellStyle },
+    styleOverrides: { ...defaultCellStyle },
     isDynamic: false,
     layout: {
       row: 0,
@@ -54,6 +54,7 @@ function mockContext(cellOverrides: Partial<ICell> = {}, ctxOverrides: Partial<E
       getCellById: (id: string) => cells[id] ?? undefined,
       getCellByAddress: () => undefined,
       createCell: () => '',
+      createCellWithId: () => '',
       updateCell: () => {},
       deleteCell: () => {},
       setCellAddress: () => {},
@@ -582,7 +583,7 @@ describe('Evaluator — Edge Cases', () => {
     it('condition: cell.overflows AND cell.fontSize > 6', () => {
       const cell = mockCell({
         rawValue: 'This is a very long text that will definitely overflow the cell bounds with a normal size',
-        style: { ...defaultCellStyle },
+        styleOverrides: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 5, height: 5 },
       });
       const ctx = mockContext({}, { cell });
@@ -592,7 +593,7 @@ describe('Evaluator — Edge Cases', () => {
     it('condition: cell.overflows with non-overflowing cell', () => {
       const cell = mockCell({
         rawValue: 'Hi',
-        style: { ...defaultCellStyle },
+        styleOverrides: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 100, height: 100 },
       });
       const ctx = mockContext({}, { cell });

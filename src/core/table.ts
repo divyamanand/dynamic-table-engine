@@ -2,15 +2,22 @@ import { ICellRegistry, ILayoutEngine, IMergeRegistry, IStructureStore, ITable }
 import { ICell } from "../interfaces/core"
 import { IRuleEngine } from "../interfaces/rules/rule-engine.interface"
 import { EvaluationResult } from "../rules/types/evaluation.types"
-import { CellPayload, Region, TableSettings } from "../types"
+import { CellPayload, Region, TableSettings, TableStyle, RegionStyle, BodyRegionStyle, RegionStyleMap } from "../types"
 import { Rect } from "../types/common"
+import type { SerializedHeaderNode, SerializedBodyCell, TableExportData } from "../renderers/types/serialization.types"
+import { StructureStore } from "../stores/structure.store"
+import { CellRegistry } from "../stores/cell-registry.store"
+import { MergeRegistry } from "../stores/merge-registry.stores"
+import { LayoutEngine } from "../engines/layout.engine"
+import { RuleRegistry } from "../rules/rule-registry"
+import { RuleEngine } from "../rules/rule-engine"
+import { defaultTableStyle } from "../styles/defaults"
 
 const DEFAULT_TABLE_SETTINGS: TableSettings = {
     overflow: 'wrap',
     footer: { mode: 'last-page' },
     headerVisibility: { theader: true, lheader: true, rheader: true },
     pagination: { repeatHeaders: true },
-    tableStyles: { borderColor: '#888888', borderWidth: 0.1 },
 }
 
 export class Table implements ITable {
@@ -20,6 +27,8 @@ export class Table implements ITable {
     private mergeRegistry: IMergeRegistry
     private settings: TableSettings
     private ruleEngine: IRuleEngine
+    private _tableStyle: TableStyle
+    private _regionStyles: RegionStyleMap
 
     constructor(
         structureStore: IStructureStore,
@@ -27,7 +36,9 @@ export class Table implements ITable {
         layoutEngine: ILayoutEngine,
         mergeRegistry: IMergeRegistry,
         ruleEngine: IRuleEngine,
-        settings?: TableSettings
+        settings?: TableSettings,
+        tableStyle?: TableStyle,
+        regionStyles?: RegionStyleMap,
     ) {
         this.structureStore = structureStore
         this.cellRegistry = cellRegistry
@@ -35,6 +46,8 @@ export class Table implements ITable {
         this.mergeRegistry = mergeRegistry
         this.ruleEngine = ruleEngine
         this.settings = { ...DEFAULT_TABLE_SETTINGS, ...settings }
+        this._tableStyle = { ...defaultTableStyle, ...tableStyle }
+        this._regionStyles = regionStyles ? { ...regionStyles } : {}
     }
 
     getEvaluationResult(cellId: string): EvaluationResult | undefined {
@@ -87,7 +100,7 @@ export class Table implements ITable {
         }
     }
 
-    // --- Settings ---
+    // --- Settings (logical config) ---
 
     getSettings(): TableSettings {
         return { ...this.settings }
@@ -96,6 +109,28 @@ export class Table implements ITable {
     updateSettings(patch: Partial<TableSettings>): void {
         this.settings = { ...this.settings, ...patch }
         this.rebuildAndEvaluate()
+    }
+
+    // --- Styles ---
+
+    getTableStyle(): TableStyle {
+        return { ...this._tableStyle }
+    }
+
+    setTableStyle(patch: Partial<TableStyle>): void {
+        this._tableStyle = { ...this._tableStyle, ...patch }
+    }
+
+    getRegionStyles(): RegionStyleMap {
+        return { ...this._regionStyles }
+    }
+
+    getRegionStyle(region: Region): RegionStyle | BodyRegionStyle | undefined {
+        return this._regionStyles[region]
+    }
+
+    setRegionStyle(region: Region, style: RegionStyle | BodyRegionStyle): void {
+        this._regionStyles = { ...this._regionStyles, [region]: style }
     }
 
     // --- Header operations ---
@@ -303,5 +338,184 @@ export class Table implements ITable {
 
     getCompleteGrid(): string[][] {
         return this.layoutEngine.getCompleteGrid()
+    }
+
+    // --- Serialization ---
+
+    exportState(): TableExportData {
+        const headerRegions: Region[] = ['theader', 'lheader', 'rheader', 'footer']
+        const headerTrees = {} as Record<Region, SerializedHeaderNode[]>
+
+        for (const region of headerRegions) {
+            const roots = this.structureStore.getRoots(region)
+            headerTrees[region] = roots
+                ? roots.map(rootId => this.serializeHeaderNode(rootId))
+                : []
+        }
+        // body region has no header tree
+        headerTrees['body'] = []
+
+        const bodyGrid = this.structureStore.getBody()
+        const body: SerializedBodyCell[][] = bodyGrid.map(row =>
+            row.map(cellId => {
+                const cell = this.cellRegistry.getCellById(cellId)!
+                return {
+                    cellId: cell.cellID,
+                    rawValue: cell.rawValue,
+                    style: { ...cell.styleOverrides },
+                    isDynamic: cell.isDynamic,
+                    computedValue: cell.computedValue,
+                }
+            })
+        )
+
+        const mergeSet = this.mergeRegistry.getMergeSet()
+        const merges: Rect[] = [...mergeSet.values()]
+
+        const rules = this.ruleEngine?.exportRules() ?? []
+
+        return {
+            headerTrees,
+            body,
+            merges,
+            settings: { ...this.settings },
+            tableStyle: { ...this._tableStyle },
+            regionStyles: { ...this._regionStyles },
+            columnWidths: [...this.layoutEngine.getColumnWidths()],
+            rowHeights: [...this.layoutEngine.getRowHeights()],
+            defaultCellWidth: this.layoutEngine.getDefaultCellWidth(),
+            defaultCellHeight: this.layoutEngine.getDefaultCellHeight(),
+            rules,
+        }
+    }
+
+    private serializeHeaderNode(cellId: string): SerializedHeaderNode {
+        const cell = this.cellRegistry.getCellById(cellId)!
+        const children = this.structureStore.getChildren(cellId) ?? []
+        return {
+            cellId: cell.cellID,
+            rawValue: cell.rawValue,
+            style: { ...cell.styleOverrides },
+            isDynamic: cell.isDynamic,
+            computedValue: cell.computedValue,
+            children: children.map(childId => this.serializeHeaderNode(childId)),
+        }
+    }
+
+    /**
+     * Reconstruct a Table from exported data.
+     * Creates fresh stores, restores all cells with original IDs,
+     * rebuilds header trees, body grid, merges, geometry, and rules.
+     */
+    static fromExportData(data: TableExportData): Table {
+        const structureStore = new StructureStore()
+        const cellRegistry = new CellRegistry()
+        const mergeRegistry = new MergeRegistry(structureStore)
+        const layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry)
+        const ruleRegistry = new RuleRegistry()
+
+        // Restore header trees
+        const headerRegions: Region[] = ['theader', 'lheader', 'rheader', 'footer']
+        for (const region of headerRegions) {
+            const trees = data.headerTrees[region] ?? []
+            for (const node of trees) {
+                Table.restoreHeaderNode(node, region, cellRegistry, structureStore, undefined)
+            }
+        }
+
+        // Restore body grid
+        for (let rowIdx = 0; rowIdx < data.body.length; rowIdx++) {
+            const row = data.body[rowIdx]
+            const cellIds: string[] = []
+            for (const cellData of row) {
+                cellRegistry.createCellWithId(
+                    cellData.cellId,
+                    'body',
+                    cellData.rawValue?.toString(),
+                    cellData.style,
+                    cellData.isDynamic,
+                    cellData.computedValue,
+                )
+                cellIds.push(cellData.cellId)
+            }
+            structureStore.insertBodyRow(rowIdx, cellIds)
+        }
+
+        // Restore geometry
+        layoutEngine.setDefaultCellWidth(data.defaultCellWidth)
+        layoutEngine.setDefaultCellHeight(data.defaultCellHeight)
+        for (let i = 0; i < data.columnWidths.length; i++) {
+            if (i < layoutEngine.getColumnWidths().length) {
+                layoutEngine.setColumnWidth(i, data.columnWidths[i])
+            } else {
+                layoutEngine.insertColumnWidth(i, data.columnWidths[i])
+            }
+        }
+        for (let i = 0; i < data.rowHeights.length; i++) {
+            if (i < layoutEngine.getRowHeights().length) {
+                layoutEngine.setRowHeight(i, data.rowHeights[i])
+            } else {
+                layoutEngine.insertRowHeight(i, data.rowHeights[i])
+            }
+        }
+
+        // Create Table with styles
+        const table = new Table(
+            structureStore,
+            cellRegistry,
+            layoutEngine,
+            mergeRegistry,
+            undefined as unknown as IRuleEngine,
+            data.settings,
+            data.tableStyle,
+            data.regionStyles,
+        )
+
+        // Create real rule engine and wire it up
+        const ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, table)
+        ;(table as any).ruleEngine = ruleEngine
+
+        // Import rules
+        if (data.rules.length > 0) {
+            ruleEngine.importRules(data.rules)
+        }
+
+        // Restore merges (must be done after layout engine has structure)
+        for (const merge of data.merges) {
+            mergeRegistry.createMerge(merge)
+        }
+
+        // Rebuild layout + evaluate rules
+        layoutEngine.rebuild()
+        ruleEngine.evaluateAll()
+
+        return table
+    }
+
+    private static restoreHeaderNode(
+        node: SerializedHeaderNode,
+        region: Region,
+        cellRegistry: CellRegistry,
+        structureStore: StructureStore,
+        parentId: string | undefined,
+    ): void {
+        cellRegistry.createCellWithId(
+            node.cellId,
+            region,
+            node.rawValue?.toString(),
+            node.style,
+            node.isDynamic,
+            node.computedValue,
+        )
+
+        if (parentId) {
+            structureStore.addChildCell(parentId, region, node.cellId)
+        } else {
+            structureStore.addRootCell(node.cellId, region)
+        }
+
+        for (const child of node.children) {
+            Table.restoreHeaderNode(child, region, cellRegistry, structureStore, node.cellId)
+        }
     }
 }

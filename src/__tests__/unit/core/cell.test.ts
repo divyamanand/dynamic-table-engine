@@ -31,7 +31,7 @@ describe('Cell', () => {
             expect(cell.inRegion).toBe('body')
             expect(cell.rawValue).toBe('Hello')
             expect(cell.isDynamic).toBe(false)
-            expect(cell.style).toEqual(style)
+            expect(cell.styleOverrides).toEqual(style)
             expect(cell.computedValue).toBeUndefined()
         })
 
@@ -155,10 +155,10 @@ describe('Cell', () => {
         })
     })
 
-    describe('style property', () => {
-        it('should maintain style reference', () => {
+    describe('styleOverrides property', () => {
+        it('should maintain styleOverrides reference', () => {
             const cell = new Cell('cell-1', 'body', 'test', false, style)
-            expect(cell.style).toBe(style)
+            expect(cell.styleOverrides).toBe(style)
         })
 
         it('should support partial style', () => {
@@ -179,8 +179,8 @@ describe('Cell', () => {
             }
 
             const cell = new Cell('cell-1', 'body', 'test', false, partialStyle)
-            expect(cell.style.bold).toBe(true)
-            expect(cell.style.fontSize).toBe(16)
+            expect(cell.styleOverrides.bold).toBe(true)
+            expect(cell.styleOverrides.fontSize).toBe(16)
         })
     })
 

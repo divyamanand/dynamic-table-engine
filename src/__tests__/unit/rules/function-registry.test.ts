@@ -8,7 +8,7 @@ function mockCell(id: string, rawValue: any = ''): ICell {
     cellID: id,
     inRegion: 'body',
     rawValue,
-    style: { ...defaultCellStyle },
+    styleOverrides: { ...defaultCellStyle },
     isDynamic: false,
   };
 }
@@ -30,6 +30,7 @@ function makeContext(): EvalContext {
       },
       getCellByAddress: () => undefined,
       createCell: () => '',
+      createCellWithId: () => '',
       updateCell: () => {},
       deleteCell: () => {},
       setCellAddress: () => {},

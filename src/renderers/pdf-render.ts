@@ -58,13 +58,12 @@ async function drawTable(
   // Initialize result buffer (placeholder - will be replaced with actual PDF library)
   let pdfBuffer = new Uint8Array()
 
-  const { settings, regions, columns, tableStyles } = renderableTable
-  const tablePosition = settings.tableStyles?.borderWidth || 0
+  const { settings, regions, columns, tableStyle } = renderableTable
 
   let cursorY = context.margin.top
 
   // Step 1: Draw outer table border if needed
-  if (tableStyles.borderWidth > 0) {
+  if (tableStyle.borderWidth) {
     // drawTableBorder(context, cursorY, renderableTable)
   }
 
@@ -232,7 +231,7 @@ async function drawCell(
     //   color: cell.style.fontColor,
     //   bold: cell.style.bold,
     //   italic: cell.style.italic,
-    //   alignment: cell.style.alignment || column.alignment,
+    //   alignment: cell.style.alignment,
     //   verticalAlignment: cell.style.verticalAlignment
     // })
   }

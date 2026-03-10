@@ -62,11 +62,11 @@ export class TextMeasurer {
     if (!cell.layout) return false;
 
     const text = String(cell.rawValue ?? '');
-    const fontSize = cell.style?.fontSize || 12;
+    const fontSize = cell.styleOverrides?.fontSize || 12;
     const metrics = this.measureText(text, { fontSize });
 
     // Subtract padding from available dimensions
-    const padding = cell.style?.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    const padding = cell.styleOverrides?.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
     const availWidth = cell.layout.width - padding.left - padding.right;
     const availHeight = cell.layout.height - padding.top - padding.bottom;
 

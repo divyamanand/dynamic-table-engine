@@ -1,6 +1,7 @@
 import { ITable } from '../interfaces/table/table.inteface'
 import { ICell } from '../interfaces/core/cell.interface'
 import { Region } from '../types'
+import { resolveStyle } from '../styles/resolve'
 import {
   RenderableCell,
   RenderableRow,
@@ -34,9 +35,10 @@ export class RenderableTable {
    */
   static create(table: ITable): RenderableTableInstance {
     const settings = table.getSettings()
+    const tableStyle = table.getTableStyle()
+    const regionStyles = table.getRegionStyles()
     const columnWidths = table.getColumnWidths()
     const rowHeights = table.getRowHeights()
-    const tablePosition = table.getTablePosition()
 
     // Step 1: Initialize collections
     const cellsById = new Map<string, RenderableCell>()
@@ -51,23 +53,8 @@ export class RenderableTable {
     }
 
     // Step 2: Iterate through all cells and organize by region
-    // Since Table stores cells by ID and we need to iterate by region,
-    // we need to extract all cells and group them
-
-    // We'll build the regions by getting cells from the table
-    // The table has a complete grid that we can use as reference
-
-    const completeGrid = table.getCompleteGrid()
-
-    // Map to track which cells belong to which region
-    const cellsByRegion = new Map<Region, Map<number, RenderableCell[]>>()
     const regionList: Region[] = ['theader', 'lheader', 'rheader', 'footer', 'body']
 
-    for (const region of regionList) {
-      cellsByRegion.set(region, new Map())
-    }
-
-    // Extract all cells and group by region
     let rowIndexByRegion: Record<Region, number> = {
       theader: 0,
       lheader: 0,
@@ -87,14 +74,12 @@ export class RenderableTable {
       }
 
       for (let colIdx = 0; colIdx < columnWidths.length; colIdx++) {
-        // Try to get cell at this address
         const cell = table.getCellByAddress(rowIdx, colIdx)
 
         if (cell) {
-          const renderableCell = this.convertCell(cell, table, evaluationResults)
+          const renderableCell = this.convertCell(cell, table, regionStyles, evaluationResults)
           cellsById.set(cell.cellID, renderableCell)
 
-          // Add to the appropriate region
           const region = cell.inRegion
           if (rowCellsByRegion[region]) {
             rowCellsByRegion[region].push(renderableCell)
@@ -132,7 +117,6 @@ export class RenderableTable {
     const columns: RenderableColumn[] = columnWidths.map((width, idx) => ({
       colIndex: idx,
       width,
-      alignment: settings.columnStyles?.alignment?.[idx],
     }))
 
     // Step 4: Extract merges
@@ -170,7 +154,8 @@ export class RenderableTable {
     // Step 6: Combine into instance
     const instance: RenderableTableInstance = {
       settings,
-      tableStyles: settings.tableStyles || { borderColor: '#000', borderWidth: 0.1 },
+      tableStyle,
+      regionStyles,
       columns,
       regions,
       cellsById,
@@ -216,18 +201,12 @@ export class RenderableTable {
   }
 
   /**
-   * Check if cell belongs to a specific region
-   */
-  private static isCellInRegion(cell: ICell, region: Region): boolean {
-    return cell.inRegion === region
-  }
-
-  /**
-   * Convert ICell to RenderableCell with all calculated properties
+   * Convert ICell to RenderableCell with fully resolved style via cascade
    */
   private static convertCell(
     cell: ICell,
     table: ITable,
+    regionStyles: Record<string, any>,
     evaluationResults: Map<string, any>
   ): RenderableCell {
     // Get evaluation result if cell is dynamic
@@ -237,16 +216,21 @@ export class RenderableTable {
       evaluationResults.set(cell.cellID, evalResult)
     }
 
+    // Resolve style through cascade: defaultCellStyle → regionStyle → cell overrides
+    // Rule patches are NOT applied here — they go through RuleEngine.resolveCell() at render time
+    const regionStyle = regionStyles[cell.inRegion]
+    const resolvedStyle = resolveStyle(regionStyle, cell.styleOverrides)
+
     return {
       cellID: cell.cellID,
       rawValue: cell.rawValue,
       computedValue: cell.computedValue,
-      layout: cell.layout!,  // Layout engine calculated this
-      style: cell.style,
+      layout: cell.layout!,
+      style: resolvedStyle,
       inRegion: cell.inRegion,
       evaluationResult: evalResult,
       isDynamic: cell.isDynamic,
-      mergeRect: undefined,  // Will be set from merge registry if needed
+      mergeRect: undefined,
     }
   }
 }

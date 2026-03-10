@@ -8,7 +8,7 @@ function mockCell(overrides: Partial<ICell> = {}): ICell {
     cellID: 'cell-001',
     inRegion: 'body',
     rawValue: 'test',
-    style: { ...defaultCellStyle },
+    styleOverrides: { ...defaultCellStyle },
     isDynamic: false,
     layout: { row: 2, col: 3, rowSpan: 1, colSpan: 1, x: 10, y: 20, width: 50, height: 20 },
     ...overrides,
@@ -23,6 +23,7 @@ function makeContext(cellOverrides: Partial<ICell> = {}, ctxOverrides: Partial<E
       getCellById: () => undefined,
       getCellByAddress: () => undefined,
       createCell: () => '',
+      createCellWithId: () => '',
       updateCell: () => {},
       deleteCell: () => {},
       setCellAddress: () => {},
@@ -226,14 +227,14 @@ describe('VarCatalog', () => {
 
   describe('cell.fontSize', () => {
     it('returns style fontSize', () => {
-      const ctx = makeContext({ style: { ...defaultCellStyle, fontSize: 16 } });
+      const ctx = makeContext({ styleOverrides: { ...defaultCellStyle, fontSize: 16 } });
       expect(resolveVar('cell.fontSize', ctx)).toBe(16);
     });
 
     it('returns 0 when fontSize is 0 (resolver uses ?? not ||)', () => {
       // The resolver uses `cell.style?.fontSize ?? 12` which passes 0 through
       // (unlike TextMeasurer which uses `|| 12`)
-      const ctx = makeContext({ style: { ...defaultCellStyle, fontSize: 0 } });
+      const ctx = makeContext({ styleOverrides: { ...defaultCellStyle, fontSize: 0 } });
       expect(resolveVar('cell.fontSize', ctx)).toBe(0);
     });
 
@@ -258,7 +259,7 @@ describe('VarCatalog', () => {
     it('returns true for long text in narrow cell', () => {
       const ctx = makeContext({
         rawValue: 'This is a very very long text that should definitely overflow',
-        style: { ...defaultCellStyle },
+        styleOverrides: { ...defaultCellStyle },
         layout: { row: 0, col: 0, rowSpan: 1, colSpan: 1, x: 0, y: 0, width: 5, height: 5 },
       });
       expect(resolveVar('cell.overflows', ctx)).toBe(true);

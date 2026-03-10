@@ -5,7 +5,7 @@ export class Cell implements ICell {
     private readonly _cellID: string;
     public inRegion: Region;
     public rawValue: string | number;
-    public style: CellStyle;
+    public styleOverrides: Partial<CellStyle>;
     public isDynamic: boolean;
     public computedValue?: string | number;
 
@@ -16,14 +16,14 @@ export class Cell implements ICell {
         inRegion: Region,
         rawValue: string | number,
         isDynamic: boolean = false,
-        style: CellStyle,
+        styleOverrides: Partial<CellStyle> = {},
         computedValue?: string | number,
     ) {
         this._cellID = cellID;
         this.inRegion = inRegion;
         this.rawValue = rawValue;
         this.isDynamic = isDynamic;
-        this.style = style;
+        this.styleOverrides = styleOverrides;
         this.computedValue = computedValue;
     }
 

@@ -32,18 +32,13 @@ describe('Complete Workflow Integration Test', () => {
     mergeRegistry = new MergeRegistry(structureStore);
     layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry);
     ruleRegistry = new RuleRegistry();
-    ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, {} as any);
 
-    // Create table with all real services
-    table = new Table(
-      structureStore,
-      cellRegistry,
-      layoutEngine,
-      mergeRegistry
-    );
+    // Create temporary table for rule engine init
+    const tempTable = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any);
+    ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, tempTable);
 
-    // Set rule engine after table creation
-    table.setRuleEngine(ruleEngine);
+    // Create final table with rule engine
+    table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine);
   });
 
   describe('Step 1-3: Create theader roots with styles and geometry', () => {
@@ -54,7 +49,7 @@ describe('Complete Workflow Integration Test', () => {
       const cell1 = cellRegistry.getCellById(rootId1);
 
       // Verify default style
-      expect(cell1?.style).toEqual(defaultCellStyle);
+      expect(cell1?.styleOverrides).toEqual({});
 
       // Verify default geometry
       expect(cell1?.layout).toBeDefined();
@@ -78,9 +73,9 @@ describe('Complete Workflow Integration Test', () => {
       table.updateCell(rootId1, { style: newStyle });
       const cell1 = cellRegistry.getCellById(rootId1);
 
-      expect(cell1?.style.fontColor).toBe('#FF0000');
-      expect(cell1?.style.fontSize).toBe(16);
-      expect(cell1?.style.bold).toBe(true);
+      expect(cell1?.styleOverrides.fontColor).toBe('#FF0000');
+      expect(cell1?.styleOverrides.fontSize).toBe(16);
+      expect(cell1?.styleOverrides.bold).toBe(true);
     });
 
     it('should change geometry for the first root cell', () => {
@@ -149,13 +144,13 @@ describe('Complete Workflow Integration Test', () => {
       const root = cellRegistry.getCellById(rootId1);
       const child = cellRegistry.getCellById(childId);
 
-      expect(root?.style.fontColor).toBe('#FF0000');
-      expect(root?.style.bold).toBe(true);
-      expect(root?.style.italic).toBe(false);
+      expect(root?.styleOverrides.fontColor).toBe('#FF0000');
+      expect(root?.styleOverrides.bold).toBe(true);
+      expect(root?.styleOverrides.italic).toBeUndefined();
 
-      expect(child?.style.fontColor).toBe('#0000FF');
-      expect(child?.style.italic).toBe(true);
-      expect(child?.style.bold).toBe(false);
+      expect(child?.styleOverrides.fontColor).toBe('#0000FF');
+      expect(child?.styleOverrides.italic).toBe(true);
+      expect(child?.styleOverrides.bold).toBeUndefined();
     });
   });
 
@@ -190,9 +185,9 @@ describe('Complete Workflow Integration Test', () => {
       const root2 = cellRegistry.getCellById(rootId2);
 
       [root1, child, root2].forEach(cell => {
-        expect(cell?.style.fontColor).toBe('#00AA00');
-        expect(cell?.style.fontSize).toBe(14);
-        expect(cell?.style.backgroundColor).toBe('#FFFFCC');
+        expect(cell?.styleOverrides.fontColor).toBe('#00AA00');
+        expect(cell?.styleOverrides.fontSize).toBe(14);
+        expect(cell?.styleOverrides.backgroundColor).toBe('#FFFFCC');
       });
     });
   });
@@ -225,7 +220,7 @@ describe('Complete Workflow Integration Test', () => {
       const root3 = cellRegistry.getCellById(rootId3);
 
       // Should have region style
-      expect(root3?.style.fontColor).toBe('#00AA00');
+      expect(root3?.styleOverrides.fontColor).toBe('#00AA00');
 
       // Should have default column width
       expect(root3?.layout?.width).toBe(30);
@@ -351,7 +346,7 @@ describe('Complete Workflow Integration Test', () => {
       const cell = cellRegistry.getCellById(cellId);
       expect(cell?.rawValue).toBe(overflowText);
       expect(cell?.layout?.width).toBe(30);
-      expect(cell?.style.fontSize).toBe(13);
+      expect(cell?.styleOverrides.fontSize).toBeUndefined(); // defaults not merged into overrides
 
       // Resolve cell to get merged style
       const resolvedCell = ruleEngine.resolveCell(cell!);
@@ -680,7 +675,7 @@ describe('Complete Workflow Integration Test', () => {
         const cell = cellRegistry.getCellById(id);
         expect(cell).toBeDefined();
         expect(cell?.layout).toBeDefined();
-        expect(cell?.style).toBeDefined();
+        expect(cell?.styleOverrides).toBeDefined();
       });
     });
   });

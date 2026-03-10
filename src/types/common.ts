@@ -53,18 +53,63 @@ export interface CellStyle {
 export type Style = CellStyle
 
 // ---------------------------------------------------------------------------
-// Table-level style types (pdfme-compatible)
+// Table-level style types
 // ---------------------------------------------------------------------------
 
-export interface TableStyles {
-    borderColor: string;
-    borderWidth: number;    // outer border only, single value in mm
+/** Visual frame of the table (outer border, outline, corner radius) */
+export interface TableStyle {
+    borderColor?: string;
+    borderWidth?: Spacing;
+    outline?: {
+        color?: string;
+        width?: number;
+        style?: 'solid' | 'dashed' | 'dotted';
+    };
+    cornerRadius?: {
+        topLeft?: number;
+        topRight?: number;
+        bottomLeft?: number;
+        bottomRight?: number;
+    };
 }
 
+// ---------------------------------------------------------------------------
+// Region-level style types
+// ---------------------------------------------------------------------------
+
+/** Per-region style defaults — same shape as CellStyle but fully optional */
+export type RegionStyle = Partial<CellStyle>
+
+/** Body region gets an extra alternating row color property */
+export interface BodyRegionStyle extends RegionStyle {
+    alternateBackgroundColor?: string;
+}
+
+/** Map of region → style overrides */
+export type RegionStyleMap = {
+    theader?: RegionStyle;
+    lheader?: RegionStyle;
+    rheader?: RegionStyle;
+    footer?: RegionStyle;
+    body?: BodyRegionStyle;
+}
+
+// ---------------------------------------------------------------------------
+// Deprecated — kept for backward compatibility, will be removed
+// ---------------------------------------------------------------------------
+
+/** @deprecated Use TableStyle instead */
+export interface TableStyles {
+    borderColor: string;
+    borderWidth: number;
+}
+
+/** @deprecated Use BodyRegionStyle instead */
 export interface BodyStyles extends CellStyle {
     alternateBackgroundColor: string;
 }
 
+/** @deprecated No longer used — column alignment handled via region styles */
 export interface ColumnStyleOverrides {
     alignment?: Record<number, Alignment>;
 }
@@ -114,10 +159,5 @@ export interface TableSettings {
     overflow?: OverflowMode
     footer?: FooterPlacement
     headerVisibility?: HeaderVisibility
-    defaultStyle?: Partial<CellStyle>
     pagination?: PaginationSettings
-    tableStyles?: TableStyles
-    headStyles?: Partial<CellStyle>
-    bodyStyles?: Partial<BodyStyles>
-    columnStyles?: ColumnStyleOverrides
 }

@@ -3,24 +3,11 @@ import { ICell, ICellRegistry } from "../interfaces";
 import { CellPayload, CellStyle, Region } from "../types";
 import {v1 as uuid} from "uuid"
 
-export const defaultCellStyle: CellStyle = {
-    fontName: undefined,
-    bold: false,
-    italic: false,
-    alignment: 'left',
-    verticalAlignment: 'middle',
-    fontSize: 13,
-    lineHeight: 1,
-    characterSpacing: 0,
-    fontColor: '#000000',
-    backgroundColor: '',
-    borderColor: '#888888',
-    borderWidth: { top: 0.1, right: 0.1, bottom: 0.1, left: 0.1 },
-    padding: { top: 5, right: 5, bottom: 5, left: 5 },
-}
+/** @deprecated Import from '../styles' instead */
+export { defaultCellStyle } from "../styles/defaults"
 
-/** @deprecated Use defaultCellStyle instead */
-export const defaultStyle = defaultCellStyle
+/** @deprecated Use defaultCellStyle from '../styles' instead */
+export { defaultCellStyle as defaultStyle } from "../styles/defaults"
 
 export class CellRegistry implements ICellRegistry {
 
@@ -59,10 +46,15 @@ export class CellRegistry implements ICellRegistry {
 
     createCell(region: Region, rawValue?: string, style?: Partial<CellStyle>, isDynamic?: boolean): string {
         const randomId = uuid()
-        const mergedStyle: CellStyle = { ...defaultCellStyle, ...style }
-        const newCell = new Cell(randomId, region, rawValue ?? "Cell", isDynamic ?? false, mergedStyle)
+        const newCell = new Cell(randomId, region, rawValue ?? "Cell", isDynamic ?? false, style)
         this.cellsById.set(randomId, newCell)
         return randomId
+    }
+
+    createCellWithId(cellId: string, region: Region, rawValue?: string, style?: Partial<CellStyle>, isDynamic?: boolean, computedValue?: string | number): string {
+        const newCell = new Cell(cellId, region, rawValue ?? "Cell", isDynamic ?? false, style, computedValue)
+        this.cellsById.set(cellId, newCell)
+        return cellId
     }
 
     deleteCell(cellId: string): void {
@@ -93,7 +85,7 @@ export class CellRegistry implements ICellRegistry {
             }
 
             if (style) {
-                cell.style = { ...cell.style, ...style }
+                cell.styleOverrides = { ...cell.styleOverrides, ...style }
             }
         }
     }

@@ -1,8 +1,9 @@
 import { ICell } from "../core"
-import { CellPayload, Region, TableSettings, TablePosition } from "../../types"
+import { CellPayload, Region, TableSettings, TablePosition, TableStyle, RegionStyle, BodyRegionStyle, RegionStyleMap } from "../../types"
 import { Rect } from "../../types/common"
 import type { IRuleEngine } from "../rules/rule-engine.interface"
 import type { EvaluationResult } from "../../rules/types/evaluation.types"
+import type { TableExportData } from "../../renderers/types/serialization.types"
 
 export interface ITable {
     // Header operations
@@ -26,9 +27,16 @@ export interface ITable {
     unmergeCells(cellId: string): void
     getMerges(): Map<string, Rect>
 
-    // Settings
+    // Settings (logical config only)
     getSettings(): TableSettings
     updateSettings(settings: Partial<TableSettings>): void
+
+    // Styles
+    getTableStyle(): TableStyle
+    setTableStyle(style: Partial<TableStyle>): void
+    getRegionStyles(): RegionStyleMap
+    getRegionStyle(region: Region): RegionStyle | BodyRegionStyle | undefined
+    setRegionStyle(region: Region, style: RegionStyle | BodyRegionStyle): void
 
     // Geometry
     setColumnWidth(colIndex: number, width: number): void
@@ -44,4 +52,7 @@ export interface ITable {
     getCompleteGrid(): string[][]
 
     getEvaluationResult(cellId: string): EvaluationResult | undefined
+
+    // Serialization
+    exportState(): TableExportData
 }

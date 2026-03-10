@@ -35,10 +35,13 @@ describe('Body Operations Integration Test', () => {
     mergeRegistry = new MergeRegistry(structureStore);
     layoutEngine = new LayoutEngine(mergeRegistry, structureStore, cellRegistry);
     ruleRegistry = new RuleRegistry();
-    ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, {} as any);
 
-    table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry);
-    table.setRuleEngine(ruleEngine);
+    // Create temporary table for rule engine init
+    const tempTable = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, {} as any);
+    ruleEngine = new RuleEngine(ruleRegistry, cellRegistry, structureStore, tempTable);
+
+    // Create final table with rule engine
+    table = new Table(structureStore, cellRegistry, layoutEngine, mergeRegistry, ruleEngine);
   });
 
   describe('Body Insertion - Matching Leaf Node Count', () => {

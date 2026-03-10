@@ -1,9 +1,10 @@
-import { CellLayout, CellStyle, TableSettings, TableStyles, Region, Rect } from "../../types"
+import { CellLayout, CellStyle, TableSettings, TableStyle, RegionStyleMap, Region, Rect } from "../../types"
 import { EvaluationResult } from "../../rules/types/evaluation.types"
 
 /**
  * Renderable version of a cell - optimized for rendering
- * Contains all calculated and style information needed by renderers
+ * Contains all calculated and style information needed by renderers.
+ * style is the fully resolved CellStyle (after cascade).
  */
 export interface RenderableCell {
   // Cell identity
@@ -14,7 +15,7 @@ export interface RenderableCell {
   // Layout (calculated by layout engine)
   layout: CellLayout  // row, col, rowSpan, colSpan, x, y, width, height
 
-  // Styling
+  // Styling (fully resolved via cascade: default → region → cell → rules)
   style: CellStyle
 
   // Region (theader, lheader, rheader, footer, body)
@@ -49,9 +50,6 @@ export interface RenderableRow {
 export interface RenderableColumn {
   colIndex: number
   width: number  // calculated column width
-
-  // Optional: column-level style overrides
-  alignment?: 'left' | 'center' | 'right' | 'justify'
 }
 
 /**
@@ -73,7 +71,8 @@ export interface RenderableMerge {
 export interface RenderableTableInstance {
   // Settings and styling
   settings: TableSettings
-  tableStyles: TableStyles
+  tableStyle: TableStyle
+  regionStyles: RegionStyleMap
 
   // Structural
   columns: RenderableColumn[]
