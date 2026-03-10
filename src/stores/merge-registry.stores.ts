@@ -76,13 +76,32 @@ export class MergeRegistry implements IMergeRegistry {
         return Array.from(this.mergeRegistry.keys())
     }
 
+    /**
+     * Validate if a merge rectangle is valid for the table structure
+     *
+     * For body/undefined regions: validates against full table bounds
+     * For header regions (theader, lheader, rheader, footer): skips strict validation
+     * since header bounds are region-local and validated at layout time
+     */
     isValidMerge(rect: Rect): boolean {
         const {startRow, startCol, endCol, endRow} = rect
 
-        const maxPossibleRowsIndex = this.structureStore.countTotalRows() - 1
-        const maxPosisbleColsIndex = this.structureStore.countTotalCols() - 1
+        // Basic sanity checks (always required)
+        if (startRow < 0 || startCol < 0) return false
+        if (endRow < startRow || endCol < startCol) return false
 
-        return startRow >= 0 && startCol >= 0 && endCol <= maxPosisbleColsIndex && endRow <= maxPossibleRowsIndex
+        // For header regions, skip strict bounds validation
+        // The layout engine will ignore out-of-bounds references safely
+        // This allows header merges to be created without knowing all region dimensions
+        if (rect.primaryRegion && rect.primaryRegion !== 'body') {
+            return true
+        }
+
+        // For body region (or undefined), validate against full table bounds
+        const maxPossibleRowsIndex = this.structureStore.countTotalRows() - 1
+        const maxPossibleColsIndex = this.structureStore.countTotalCols() - 1
+
+        return endCol <= maxPossibleColsIndex && endRow <= maxPossibleRowsIndex
     }
 
     private isChild(rect1: Rect, rect2: Rect): boolean {

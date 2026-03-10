@@ -22,9 +22,6 @@ export type { PDFRenderOptions, PDFContext } from './pdf-render'
 export { uiRender } from './ui-render'
 export type { UIRenderOptions, UIMode } from './ui-render'
 
-export { PropPanel, createPropPanel } from './prop-panel'
-export type { PropPanelOptions, PropPanelState } from './prop-panel'
-
 import { ITable } from '../interfaces/table/table.inteface'
 import { pdfRender, PDFRenderOptions } from './pdf-render'
 import { uiRender, UIRenderOptions } from './ui-render'
